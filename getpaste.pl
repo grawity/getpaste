@@ -41,6 +41,10 @@ sub parse_url ($) {
 	elsif (m!^${h}pastie\.org/(\d+)!)
 		{ return "http://pastie.org/$1.txt"; }
 
+	# Fucking piece of shit requires OpenID login for this.
+	#elsif (m!^${h}(paste\.ubuntu\.com)/(\d+)!)
+	#	{ return "http://$1/$2/plain/"; }
+
 	else
 		{ return "$_"; }
 }
