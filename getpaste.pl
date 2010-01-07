@@ -1,6 +1,7 @@
 #!/usr/bin/perl
-# retrieves raw text from a pastebin
-
+# getpaste v0.9
+# Retrieves raw text from a pastebin
+#
 # (c) 2009 Mantas Mikulėnas <grawity@gmail.com>
 # Released under WTFPL v2 <http://sam.zoy.org/wtfpl/>
 
