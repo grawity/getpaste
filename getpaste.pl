@@ -28,7 +28,7 @@ sub parse_url ($) {
 		{ return "http://$1/raw/$2"; }
 
 	elsif (m!^${h}(pastebin\.com)/(\w+)!)
-		{ return "http://$1/pastebin.php?dl=$2"; }
+		{ return "http://$1/download.php?i=$2"; }
 
 	# LodgeIt
 	elsif (m!^${h}(paste\.pocoo\.org|bpaste\.net)/(?:show|raw)/(\d+)!)
