@@ -11,44 +11,49 @@ no locale;
 
 use LWP::Simple;
 
+# Stolen from URI::Split
+sub uri_split {
+	return $_[0] =~ m,(?:([^:/?#]+):)?(?://([^/?#]*))?([^?#]*)(?:\?([^#]*))?(?:#(.*))?,;
+}
+
+use Data::Dumper;
+
 sub parse_url ($) {
-	($_) = @_;
-	my $h = qr[https?://];
+	my ($url) = @_;
+	my ($scheme, $host, $path, $query, $frag) = uri_split $url;
+	$path =~ s|^/||;
+	#print Dumper($scheme, $host, $path, $query, $frag);
 
-	if (m!^${h}sprunge\.us/\w+!)
-		{ return "$_"; }
+	if ($host =~ /^sprunge\.us$/)
+		{ return $url }
 
-	elsif (m!^${h}codepad\.org/(\w+)!)
-		{ return "http://codepad.org/$1/raw"; }
+	elsif ($host =~ /^codepad\.org$/ and $path =~ m!^(\w+)!)
+		{ return "http://$host/$1/raw" }
 
-	elsif (m!^${h}dpaste\.com/(?:hold/)?(\d+)!)
-		{ return "http://dpaste.com/$1/plain/"; }
+	elsif ($host =~ /^dpaste\.com$/ and $path =~ m!^(?:hold/)?(\d+)!)
+		{ return "http://$host/$1/plain/" }
 
-	elsif (m!^${h}((?:[\w-]+\.)?pastebin\.ca)/(\d+)!)
-		{ return "http://$1/raw/$2"; }
+	elsif ($host =~ /^(?:[\w-]+\.)?pastebin\.ca$/ and $path =~ m!^(?:raw/)?(\d+)!)
+		{ return "http://$host/raw/$1" }
 
-	elsif (m!^${h}(pastebin\.com)/(\w+)!)
-		{ return "http://$1/download.php?i=$2"; }
+	elsif ($host =~ /^pastebin\.com$/ and $path =~ m!^(\d+)!)
+		{ return "http://$host/download.php?i=$1" }
+
+	elsif ($host =~ /^pastebin\.org$/ and $path =~ m!^(?:pastebin\.php\?dl=)?(\d+)!)
+		{ return "http://$host/pastebin.php?dl=$1" }
+
+	elsif ($host =~ /^pastie\.org$/ and $path =~ m!^(\d+)!)
+		{ return "http://$host/$1.txt" }
 
 	# LodgeIt
-	elsif (m!^${h}(paste\.pocoo\.org|bpaste\.net)/(?:show|raw)/(\d+)!)
-		{ return "http://$1/raw/$2/"; }
+	elsif ($host =~ /^paste\.pocoo\.org|bpaste\.net$/ and $path =~ m!^(?:show|raw)/(\d+)!)
+		{ return "http://$host/raw/$1" }
 
-	elsif (m!^${h}paste2\.org/(?:p|get)/(\d+)!)
-		{ return "http://paste2.org/get/$1"; }
-
-	elsif (m!^${h}((?:code|dark-code)\.bulix\.org)/(\w+-\d+)!)
-		{ return "http://$1/$2?raw"; }
-
-	elsif (m!^${h}pastie\.org/(\d+)!)
-		{ return "http://pastie.org/$1.txt"; }
-
-	# Fucking piece of shit requires OpenID login for this.
-	#elsif (m!^${h}(paste\.ubuntu\.com)/(\d+)!)
-	#	{ return "http://$1/$2/plain/"; }
+	elsif ($host =~ /(?:dark-)?code\.bulix\.org$/ and $path =~ m!^(\w+-\d+)!)
+		{ return "http://$host/$1?raw" }
 
 	else
-		{ return "$_"; }
+		{ return "$url" }
 }
 
 my $showurl = ($ARGV[0] eq "-u");
