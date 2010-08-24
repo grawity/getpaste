@@ -52,6 +52,9 @@ sub parse_url ($) {
 	elsif ($host =~ /(?:dark-)?code\.bulix\.org$/ and $path =~ m!^(\w+-\d+)!)
 		{ return "http://$host/$1?raw" }
 
+	elsif ($host =~ /^fpaste\.org$/ and $path =~ m!^(\w+)!)
+		{ return "http:/?$host/$1/raw/" }
+
 	else
 		{ return "$url" }
 }
