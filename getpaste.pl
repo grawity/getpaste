@@ -29,6 +29,9 @@ sub parse_url ($) {
 
 	elsif ($host =~ /^codepad\.org$/ and $path =~ m!^(\w+)!)
 		{ return "http://$host/$1/raw" }
+	
+	elsif ($host =~ /^dpaste\.(org|de)$/ and $path =~ m!^(\w+)!)
+		{ return "http://$host/$1/raw/" }
 
 	elsif ($host =~ /^dpaste\.com$/ and $path =~ m!^(?:hold/)?(\d+)!)
 		{ return "http://$host/$1/plain/" }
@@ -44,7 +47,7 @@ sub parse_url ($) {
 
 	elsif ($host =~ /^pastie\.org$/ and $path =~ m!^(\d+)!)
 		{ return "http://$host/$1.txt" }
-
+	
 	# LodgeIt
 	elsif ($host =~ /^paste\.pocoo\.org|bpaste\.net$/ and $path =~ m!^(?:show|raw)/(\d+)!)
 		{ return "http://$host/raw/$1" }
