@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # getpaste v0.9
 # Retrieves raw text from a pastebin
 #
