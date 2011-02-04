@@ -65,16 +65,16 @@ sub parse_url {
 my $showurl = ($ARGV[0] eq "-u");
 shift @ARGV if $showurl;
 
-my $url = shift @ARGV;
-
-if (!defined $url) {
+if (!@ARGV) {
 	print STDERR "Usage: getpaste [-u] <url>\n";
 	exit 2;
 }
 
-if ($showurl) {
-	print parse_url($url), "\n";
-}
-else {
-	getprint parse_url($url);
+for my $url (@ARGV) {
+	if ($showurl) {
+		print parse_url($url), "\n";
+	}
+	else {
+		getprint parse_url($url);
+	}
 }
