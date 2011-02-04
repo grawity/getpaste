@@ -18,7 +18,7 @@ sub uri_split {
 
 use Data::Dumper;
 
-sub parse_url ($) {
+sub parse_url {
 	my ($url) = @_;
 	my ($scheme, $host, $path, $query, $frag) = uri_split $url;
 	$path =~ s|^/||;
@@ -73,8 +73,8 @@ if (!defined $url) {
 }
 
 if ($showurl) {
-	print parse_url $url, "\n";
+	print parse_url($url), "\n";
 }
 else {
-	getprint parse_url $url;
+	getprint parse_url($url);
 }
