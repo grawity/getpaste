@@ -46,7 +46,7 @@ sub parse_url {
 		{ return "http://$host/pastebin.php?dl=$1" }
 
 	elsif ($host =~ /^pastie\.org$/ and $path =~ m!^(\d+)!)
-		{ return "http://$host/pastes/$1/text" }
+		{ return "http://$host/pastes/$1/download" }
 	
 	# LodgeIt
 	elsif ($host =~ /^paste\.pocoo\.org|bpaste\.net$/ and $path =~ m!^(?:show|raw)/(\d+)!)
