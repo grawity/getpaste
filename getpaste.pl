@@ -76,5 +76,6 @@ for my $url (@ARGV) {
 	}
 	else {
 		getprint parse_url($url);
+		print "\n";
 	}
 }
