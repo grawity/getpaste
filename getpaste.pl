@@ -39,10 +39,11 @@ sub parse_url {
 	elsif ($host =~ /^(?:[\w-]+\.)?pastebin\.ca$/ and $path =~ m!^(?:raw/)?(\d+)!)
 		{ return "http://$host/raw/$1" }
 
-	elsif ($host =~ /^pastebin\.com$/ and $path =~ m!^(\w+)!)
+	elsif ($host =~ /^pastebin\.com$/ and $path =~ m!^(?:index/)?(\w+)!)
 		{ return "http://$host/download.php?i=$1" }
 
-	elsif ($host =~ /^pastebin\.org$/ and $path =~ m!^(?:pastebin\.php\?dl=)?(\d+)!)
+	elsif ($host =~ /^pastebin(\.centos)?\.org$/
+		and $path =~ m!^(?:pastebin\.php\?dl=)?(\d+)!)
 		{ return "http://$host/pastebin.php?dl=$1" }
 
 	elsif ($host =~ /^pastie\.org$/ and $path =~ m!^(\d+)!)
