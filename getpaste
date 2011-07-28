@@ -1,14 +1,9 @@
 #!/usr/bin/env perl
-# getpaste v0.9
-# Retrieves raw text from a pastebin
-#
-# (c) 2009 Mantas Mikulėnas <grawity@gmail.com>
+# getpaste v0.10 - Retrieves raw text from a pastebin
 # Released under WTFPL v2 <http://sam.zoy.org/wtfpl/>
-
 use warnings;
 use strict;
 no locale;
-
 use LWP::Simple;
 
 # Stolen from URI::Split
@@ -16,13 +11,10 @@ sub uri_split {
 	return $_[0] =~ m,(?:([^:/?#]+):)?(?://([^/?#]*))?([^?#]*)(?:\?([^#]*))?(?:#(.*))?,;
 }
 
-use Data::Dumper;
-
 sub parse_url {
 	my ($url) = @_;
 	my ($scheme, $host, $path, $query, $frag) = uri_split $url;
 	$path =~ s|^/||;
-	#print Dumper($scheme, $host, $path, $query, $frag);
 
 	if ($host =~ /^sprunge\.us$/)
 		{ return $url }
