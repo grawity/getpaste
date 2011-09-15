@@ -38,6 +38,10 @@ sub parse_url {
 		and $path =~ m!^(?:pastebin\.php\?dl=)?(\d+)!)
 		{ return "http://$host/pastebin.php?dl=$1" }
 
+	elsif ($host =~ /^paste\.linuxassist.net$/
+		and $path =~ m!(\d+)!)
+		{ return "http://linux:linux\@$host/pastebin.php?raw=$1" }
+
 	elsif ($host =~ /^pastie\.org$/ and $path =~ m!^(\d+)!)
 		{ return "http://$host/pastes/$1/download" }
 	
@@ -49,7 +53,10 @@ sub parse_url {
 		{ return "http://$host/$1?raw" }
 
 	elsif ($host =~ /^fpaste\.org$/ and $path =~ m!^(\w+)!)
-		{ return "http:/?$host/$1/raw/" }
+		{ return "http://$host/$1/raw/" }
+
+	elsif ($host =~ /^pastebin\.de$/ and $path =~ m!^(\d+)!)
+		{ return "http://$host/download/?id=$1" }
 
 	else
 		{ return "$url" }
