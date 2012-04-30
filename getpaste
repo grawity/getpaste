@@ -69,15 +69,15 @@ my $showurl = ($ARGV[0] eq "-u");
 shift @ARGV if $showurl;
 
 if (!@ARGV) {
-	print STDERR "Usage: getpaste [-u] <url>\n";
+	warn "Usage: getpaste [-u] <url>\n";
 	exit 2;
 }
 
 for my $url (@ARGV) {
+	my $raw = parse_url($url);
 	if ($showurl) {
-		print parse_url($url), "\n";
-	}
-	else {
-		getprint parse_url($url);
+		print "$raw\n";
+	} else {
+		getprint $raw;
 	}
 }
