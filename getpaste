@@ -62,7 +62,7 @@ sub parse_url {
 		{ return "http://$host/download/$1" }
 
 	else
-		{ return "$url" }
+		{ return undef }
 }
 
 my $showurl = ($ARGV[0] eq "-u");
@@ -73,11 +73,18 @@ if (!@ARGV) {
 	exit 2;
 }
 
+my $err = 0;
+
 for my $url (@ARGV) {
 	my $raw = parse_url($url);
-	if ($showurl) {
+	if (!defined $raw) {
+		warn "Unknown pastebin: $url\n";
+		++$err;
+	} elsif ($showurl) {
 		print "$raw\n";
 	} else {
 		getprint $raw;
 	}
 }
+
+exit $err;
