@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# getpaste v0.10 - Retrieves raw text from a pastebin
+# getpaste r11 - Retrieves raw text from a pastebin
 # Released under WTFPL v2 <http://sam.zoy.org/wtfpl/>
 use warnings;
 use strict;
