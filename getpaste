@@ -20,7 +20,7 @@ sub parse_url {
 		{ return $url }
 
 	elsif ($host =~ /^codepad\.org$/ and $path =~ m!^(\w+)!)
-		{ return "http://$host/$1/raw" }
+		{ return "http://$host/$1/raw.txt" }
 	
 	elsif ($host =~ /^dpaste\.(org|de)$/ and $path =~ m!^(\w+)!)
 		{ return "http://$host/$1/raw/" }
