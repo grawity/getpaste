@@ -34,7 +34,7 @@ sub parse_url {
 	elsif ($host =~ /^pastebin\.com$/ and $path =~ m!^(?:index/)?(\w+)!)
 		{ return "http://$host/download.php?i=$1" }
 
-	elsif ($host =~ /^pastebin(\.centos)?\.org$/
+	elsif ($host =~ /^pastebin(\.centos|\.mozilla)?\.org$/
 		and $path =~ m!^(?:pastebin\.php\?dl=)?(\d+)!)
 		{ return "http://$host/pastebin.php?dl=$1" }
 
