@@ -21,7 +21,7 @@ sub parse_url {
 
 	elsif ($host =~ /^codepad\.org$/ and $path =~ m!^(\w+)!)
 		{ return "http://$host/$1/raw.txt" }
-	
+
 	elsif ($host =~ /^dpaste\.(org|de)$/ and $path =~ m!^(\w+)!)
 		{ return "http://$host/$1/raw/" }
 
@@ -49,6 +49,9 @@ sub parse_url {
 
 	elsif ($host =~ /^fpaste\.org$/ and $path =~ m!^(\w+)!)
 		{ return "http://$host/$1/raw/" }
+
+	elsif ($host =~ /^paste\.fedoraproject\.org$/)
+		{ return "http://$host/$path/raw" }
 
 	elsif ($host =~ /^pastebin\.de$/ and $path =~ m!^(\d+)!)
 		{ return "http://$host/download/?id=$1" }
