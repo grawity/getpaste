@@ -59,6 +59,9 @@ sub parse_url {
 	elsif ($host =~ /^privatepaste\.com$/ and $path =~ m!^(\w+)!)
 		{ return "http://$host/download/$1" }
 
+	elsif ($host =~ /^gist\.github\.com$/)
+		{ return "https://$host/$path.txt" }
+
 	else
 		{ return undef }
 }
