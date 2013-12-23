@@ -11,6 +11,14 @@ sub uri_split {
 	return $_[0] =~ m,(?:([^:/?#]+):)?(?://([^/?#]*))?([^?#]*)(?:\?([^#]*))?(?:#(.*))?,;
 }
 
+sub dl_hastebin {
+	require JSON;
+	my $url = shift;
+	my $json = get($url);
+	my $data = JSON->new->utf8->decode($json);
+	return $data->{data};
+}
+
 sub parse_url {
 	my ($url) = @_;
 	my ($scheme, $host, $path, $query, $frag) = uri_split $url;
@@ -62,6 +70,9 @@ sub parse_url {
 	elsif ($host =~ /^gist\.github\.com$/)
 		{ return "https://$host/$path.txt" }
 
+	elsif ($host =~ /^hastebin\.com$/ and $path =~ m!^(\w+)!)
+		{ "http://hastebin.com/documents/$1", \&dl_hastebin }
+
 	else
 		{ return undef }
 }
@@ -77,14 +88,22 @@ if (!@ARGV) {
 my $err = 0;
 
 for my $url (@ARGV) {
-	my $raw = parse_url($url);
-	if (!defined $raw) {
+	my ($raw, $handler) = parse_url($url);
+	if (!defined $raw && !defined $handler) {
 		warn "Unknown pastebin: $url\n";
 		++$err;
 	} elsif ($showurl) {
-		print "$raw\n";
+		if ($handler) {
+			print "#unavailable\n";
+		} else {
+			print "$raw\n";
+		}
 	} else {
-		getprint $raw;
+		if ($handler) {
+			print $handler->($raw)."\n";
+		} else {
+			getprint $raw;
+		}
 	}
 }
 
