@@ -54,9 +54,36 @@ sub sjcl_decrypt {
 }
 
 sub lzw_decompress {
+	require Compress::LZW;
+
 	my ($buf) = @_;
 
-	return $buf; # TODO
+	return Compress::LZW->decompress($buf);
+}
+
+sub deflate_decompress {
+	require Compress::Zlib;
+
+	my ($buf) = @_;
+
+	my ($stream, $outbuf, $status);
+
+	($stream, $status) = Compress::Zlib::inflateInit(
+		-WindowBits => -Compress::Zlib->MAX_WBITS,
+	);
+
+	if (!defined $stream || $status != Compress::Zlib->Z_OK) {
+		die("inflateInit failed: $status");
+	}
+
+	($outbuf, $status) = $stream->inflate($buf);
+
+	if (!defined $outbuf || ($status != Compress::Zlib->Z_OK &&
+		                 $status != Compress::Zlib->Z_STREAM_END)) {
+		die("inflate failed: $status (".$stream->msg.")");
+	}
+
+	return $outbuf;
 }
 
 sub dl_0bin {
@@ -71,6 +98,21 @@ sub dl_0bin {
 	$data = decode_base64($data);
 	# currently 0bin does not compress with LZW anymore
 	#$data = lzw_decompress($data);
+	return $data;
+}
+
+sub dl_zerobin {
+	my ($url, $frag) = @_;
+
+	my $body = get($url);
+	$body =~ m{<div id="cipherdata" style="display:none;">(.+)</div>} || return;
+
+	my $data = decode_html($1);
+	$data = decode_json($data)->[0]->{data};
+	# the URL fragment is *not* decoded before passing to KDF
+	$data = sjcl_decrypt($frag, $data);
+	$data = decode_base64($data);
+	$data = deflate_decompress($data);
 	return $data;
 }
 
@@ -138,6 +180,9 @@ sub parse_url {
 
 	elsif ($host =~ /^0bin\.net$/)
 		{ $url, sub { dl_0bin(shift, $frag) } }
+
+	elsif ($host =~ /^pastebin\.aquilenet\.fr$/)
+		{ $url, sub { dl_zerobin(shift, $frag) } }
 
 	else
 		{ return undef }
