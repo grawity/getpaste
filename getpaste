@@ -116,14 +116,6 @@ sub dl_zerobin {
 	return $data;
 }
 
-sub dl_hastebin {
-	my ($url) = @_;
-
-	my $json = get($url);
-	my $data = decode_json($json);
-	return $data->{data};
-}
-
 sub parse_url {
 	my ($url) = @_;
 	my ($scheme, $host, $path, $query, $frag) = uri_split $url;
@@ -176,7 +168,7 @@ sub parse_url {
 		{ return "https://$host/$path.txt" }
 
 	elsif ($host =~ /^hastebin\.com$/ and $path =~ m!^(\w+)!)
-		{ "http://hastebin.com/documents/$1", \&dl_hastebin }
+		{ "http://hastebin.com/raw/$1" }
 
 	elsif ($host =~ /^0bin\.net$/)
 		{ $url, sub { dl_0bin(shift, $frag) } }
