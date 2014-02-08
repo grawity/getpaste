@@ -11,9 +11,71 @@ sub uri_split {
 	return $_[0] =~ m,(?:([^:/?#]+):)?(?://([^/?#]*))?([^?#]*)(?:\?([^#]*))?(?:#(.*))?,;
 }
 
+sub html_decode {
+	my $str = shift;
+	$str =~ s/&lt;/</g;
+	$str =~ s/&gt;/>/g;
+	$str =~ s/&quot;/"/g;
+	$str =~ s/&amp;/\&/g;
+	return $str;
+}
+
+sub sjcl_decrypt {
+	require Crypt::AuthEnc::CCM; # CryptX
+	require Crypt::KeyDerivation; # CryptX
+	require JSON;
+	require MIME::Base64;
+
+	Crypt::AuthEnc::CCM->import(":all");
+	Crypt::KeyDerivation->import("pbkdf2");
+	MIME::Base64->import();
+
+	my ($frag, $json) = @_;
+
+	my $data = JSON->new->utf8->decode($json);
+	my $salt = decode_base64($data->{salt});
+	my $ct   = decode_base64($data->{ct});
+	my $iv   = decode_base64($data->{iv});
+
+	my $key = pbkdf2($frag, $salt, 1000, "SHA256", 128/8);
+
+	my $tag = substr($ct, -8, 8, "");
+
+	return ccm_decrypt_verify("AES", $key, $iv, "", $ct, $tag)
+	       // _die("decryption failed");
+}
+
+sub lzw_decompress {
+	my ($buf) = @_;
+
+	return $buf; # TODO
+}
+
+sub dl_0bin {
+	require MIME::Base64;
+
+	MIME::Base64->import;
+
+	my ($url, $frag) = @_;
+
+	my $body = get($url);
+	$body =~ m{<code>\n\s*(\{.+\})\n\s*</code>} || return;
+
+	my $data = html_decode($1);
+	# the URL fragment is *not* decoded before passing to KDF
+	$data = sjcl_decrypt($frag, $data);
+	$data = decode_base64($data);
+	# currently 0bin does not compress with LZW anymore
+	$data = lzw_decompress($data);
+
+	return $data;
+}
+
 sub dl_hastebin {
 	require JSON;
-	my $url = shift;
+
+	my ($url) = @_;
+
 	my $json = get($url);
 	my $data = JSON->new->utf8->decode($json);
 	return $data->{data};
@@ -72,6 +134,9 @@ sub parse_url {
 
 	elsif ($host =~ /^hastebin\.com$/ and $path =~ m!^(\w+)!)
 		{ "http://hastebin.com/documents/$1", \&dl_hastebin }
+
+	elsif ($host =~ /^0bin.net$/)
+		{ $url, sub { dl_0bin(shift, $frag) } }
 
 	else
 		{ return undef }
