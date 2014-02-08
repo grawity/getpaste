@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# getpaste r11 - Retrieves raw text from a pastebin
+# getpaste r12 - Retrieves raw text from a pastebin
 # Released under WTFPL v2 <http://sam.zoy.org/wtfpl/>
 use warnings;
 use strict;
@@ -8,10 +8,10 @@ use JSON;
 use LWP::Simple;
 use MIME::Base64;
 
-# Stolen from URI::Split
 sub uri_split {
 	my $str = shift;
 
+	# stolen from URI::Split
 	$str =~ m,(?:([^:/?#]+):)?(?://([^/?#]*))?([^?#]*)(?:\?([^#]*))?(?:#(.*))?,;
 }
 
@@ -41,15 +41,30 @@ sub sjcl_decrypt {
 	my ($frag, $json) = @_;
 
 	my $data = try_decode_json($json);
+
+	if (($data->{v} //= "1") != 1) {
+		_die("unsupported SJCL blob version ".$data->{v});
+	}
+	if (($data->{cipher} //= "aes") ne "aes") {
+		_die("unsupported cipher ".$data->{cipher});
+	}
+	if (($data->{mode} //= "ccm") ne "ccm") {
+		_die("unsupported mode ".$data->{mode});
+	}
+
 	my $salt = decode_base64($data->{salt});
 	my $ct   = decode_base64($data->{ct});
 	my $iv   = decode_base64($data->{iv});
+	my $iter = int($data->{iter} || 1000),
+	my $ks   = int($data->{ks} || 128) / 8;
+	my $ts   = int($data->{ts} || 64) / 8;
+	my $hdr  = decode_base64($data->{adata} // "");
 
-	my $key = pbkdf2($frag, $salt, 1000, "SHA256", 128/8);
+	my $key = pbkdf2($frag, $salt, $iter, "SHA256", $ks);
 
-	my $tag = substr($ct, -8, 8, "");
+	my $tag = substr($ct, -$ts, $ts, "");
 
-	return ccm_decrypt_verify("AES", $key, $iv, "", $ct, $tag)
+	return ccm_decrypt_verify("AES", $key, $iv, $hdr, $ct, $tag)
 	       // _die("decryption failed");
 }
 
