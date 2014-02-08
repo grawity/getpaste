@@ -176,6 +176,9 @@ sub parse_url {
 	elsif ($host =~ /^pastebin\.aquilenet\.fr$/)
 		{ $url, sub { dl_zerobin(shift, $frag) } }
 
+	elsif ($host=~ /^sebsauvage\.net$/ and $path =~ m!^paste/!)
+		{ $url, sub { dl_zerobin(shift, $frag) } }
+
 	else
 		{ return undef }
 }
