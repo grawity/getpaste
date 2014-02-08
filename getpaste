@@ -7,6 +7,7 @@ no locale;
 use JSON;
 use LWP::Simple;
 use MIME::Base64;
+use Nullroute::Lib qw(_err _die);
 
 sub uri_split {
 	my $str = shift;
@@ -88,14 +89,14 @@ sub deflate_decompress {
 	);
 
 	if (!defined $stream || $status != Compress::Zlib->Z_OK) {
-		die("inflateInit failed: $status");
+		_die("inflateInit failed: $status");
 	}
 
 	($outbuf, $status) = $stream->inflate($buf);
 
 	if (!defined $outbuf || ($status != Compress::Zlib->Z_OK &&
 		                 $status != Compress::Zlib->Z_STREAM_END)) {
-		die("inflate failed: $status (".$stream->msg.")");
+		_die("inflate failed: $status (".$stream->msg.")");
 	}
 
 	return $outbuf;
@@ -206,16 +207,13 @@ if (!@ARGV) {
 	exit 2;
 }
 
-my $err = 0;
-
 for my $url (@ARGV) {
 	my ($raw, $handler) = parse_url($url);
 	if (!defined $raw && !defined $handler) {
-		warn "Unknown pastebin: $url\n";
-		++$err;
+		_err("unknown pastebin: $url");
 	} elsif ($showurl) {
 		if ($handler) {
-			print "#unavailable\n";
+			print "unavailable:\n";
 		} else {
 			print "$raw\n";
 		}
@@ -228,4 +226,4 @@ for my $url (@ARGV) {
 	}
 }
 
-exit $err;
+exit $::errors;
