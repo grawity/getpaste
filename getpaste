@@ -195,13 +195,13 @@ sub parse_url {
 		{ "http://hastebin.com/raw/$1" }
 
 	elsif ($host =~ /^0bin\.net$/)
-		{ $url, sub { dl_0bin(shift, $frag) } }
+		{ $url, \&dl_0bin, $frag }
 
 	elsif ($host =~ /^pastebin\.aquilenet\.fr$/)
-		{ $url, sub { dl_zerobin(shift, $frag) } }
+		{ $url, \&dl_zerobin, $frag }
 
 	elsif ($host=~ /^sebsauvage\.net$/ and $path =~ m!^paste/!)
-		{ $url, sub { dl_zerobin(shift, $frag) } }
+		{ $url, \&dl_zerobin, $frag }
 
 	else
 		{ return undef }
@@ -216,7 +216,7 @@ if (!@ARGV) {
 }
 
 for my $url (@ARGV) {
-	my ($raw, $handler) = parse_url($url);
+	my ($raw, $handler, @hargs) = parse_url($url);
 	if (!defined $raw && !defined $handler) {
 		_err("unknown pastebin: $url");
 	} elsif ($showurl) {
@@ -227,7 +227,7 @@ for my $url (@ARGV) {
 		}
 	} else {
 		if ($handler) {
-			print $handler->($raw)."\n";
+			print $handler->($raw, @hargs)."\n";
 		} else {
 			getprint $raw;
 		}
