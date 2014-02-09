@@ -105,6 +105,10 @@ sub deflate_decompress {
 sub dl_0bin {
 	my ($url, $frag) = @_;
 
+	if (!length $frag) {
+		_die("cannot decrypt without key in URL fragment");
+	}
+
 	my $body = get($url);
 	$body =~ m{<code>\n\s*(\{.+\})\n\s*</code>} || return;
 
@@ -119,6 +123,10 @@ sub dl_0bin {
 
 sub dl_zerobin {
 	my ($url, $frag) = @_;
+
+	if (!length $frag) {
+		_die("cannot decrypt without key in URL fragment");
+	}
 
 	my $body = get($url);
 	$body =~ m{<div id="cipherdata" style="display:none;">(.+)</div>} || return;
