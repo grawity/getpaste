@@ -33,8 +33,10 @@ sub try_decode_json {
 }
 
 sub sjcl_decrypt {
-	require Crypt::AuthEnc::CCM; # CryptX
-	require Crypt::KeyDerivation; # CryptX
+	eval {
+		require Crypt::AuthEnc::CCM;
+		require Crypt::KeyDerivation;
+	} or _die("missing Perl package \"CryptX\"");
 
 	Crypt::AuthEnc::CCM->import(":all");
 	Crypt::KeyDerivation->import("pbkdf2");
