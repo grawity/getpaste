@@ -226,7 +226,7 @@ for my $url (@ARGV) {
 		_err("unknown pastebin: $url");
 	} elsif ($showurl) {
 		if ($handler) {
-			print "unavailable:\n";
+			_err("pastebin does not have raw URLs: $url");
 		} else {
 			print "$raw\n";
 		}
