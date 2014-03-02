@@ -202,8 +202,11 @@ sub parse_url {
 	elsif ($host =~ /^pastebin\.aquilenet\.fr$/)
 		{ $url, \&dl_zerobin, $frag }
 
-	elsif ($host=~ /^sebsauvage\.net$/ and $path =~ m!^paste/!)
+	elsif ($host =~ /^sebsauvage\.net$/ and $path =~ m!^paste/!)
 		{ $url, \&dl_zerobin, $frag }
+
+	elsif ($host =~ /^www\.dropbox\.com$/)
+		{ "https://dl.dropboxusercontent.com/$path" }
 
 	else
 		{ return undef }
