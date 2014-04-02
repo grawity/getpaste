@@ -199,7 +199,7 @@ sub parse_url {
 	elsif ($host =~ /^0bin\.net$/)
 		{ $url, \&dl_0bin, $frag }
 
-	elsif ($host =~ /^(pastebin\.aquilenet|paste\.necronomicon)\.fr$/)
+	elsif ($host =~ /^(zerobin\.net|(pastebin\.aquilenet|paste\.necronomicon)\.fr)$/)
 		{ $url, \&dl_zerobin, $frag }
 
 	elsif ($host =~ /^sebsauvage\.net$/ and $path =~ m!^paste/!)
