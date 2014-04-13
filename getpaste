@@ -208,6 +208,9 @@ sub parse_url {
 	elsif ($host =~ /^www\.dropbox\.com$/)
 		{ "https://dl.dropboxusercontent.com/$path" }
 
+	elsif ($host =~ /^(www\.)?irccloud\.com$/ and $path =~ m!^pastebin/(\w+)!)
+		{ "https://$host/pastebin/$1.raw" }
+
 	else
 		{ return undef }
 }
