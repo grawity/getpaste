@@ -145,6 +145,11 @@ sub dl_zerobin {
 sub parse_url {
 	my ($url) = @_;
 	my ($scheme, $host, $path, $query, $frag) = uri_split $url;
+
+	if (!defined($host) || !defined($path)) {
+		_die("bad URL: $url");
+	}
+
 	$path =~ s|^/||;
 
 	if ($host =~ /^sprunge\.us$/)
