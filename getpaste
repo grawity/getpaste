@@ -10,8 +10,9 @@ use MIME::Base64;
 
 BEGIN {
 	if (eval {require Nullroute::Lib}) {
-		Nullroute::Lib->import(qw(_err _die));
+		Nullroute::Lib->import(qw(_debug _err _die));
 	} else {
+		sub _debug { warn "debug: @_\n" if $ENV{DEBUG}; }
 		sub _err { warn "error: @_\n"; ++$::errors; }
 		sub _die { _err(@_); exit 1; }
 	}
@@ -153,6 +154,12 @@ sub dl_zerobin {
 sub parse_url {
 	my ($url) = @_;
 	my ($scheme, $host, $path, $query, $frag) = uri_split $url;
+
+	_debug("scheme='".($scheme//"")."'".\
+		", host='".($host//"")."'".\
+		", path='".($path//"")."'".\
+		", query='".($query//"")."'".\
+		", frag='".($frag//"")."'");
 
 	if (!defined($host) || !defined($path)) {
 		_die("bad URL: $url");
