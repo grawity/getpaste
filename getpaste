@@ -225,6 +225,9 @@ sub parse_url {
 	elsif ($host =~ /^sebsauvage\.net$/ and $path =~ m!^paste/!)
 		{ $url, \&dl_zerobin, $frag }
 
+	elsif ($url =~ m!^zerobin\+(https?://.+)$!)
+		{ $1, \&dl_zerobin, $frag }
+
 	elsif ($host =~ /^www\.dropbox\.com$/)
 		{ "https://dl.dropboxusercontent.com/$path" }
 
