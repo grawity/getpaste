@@ -19,6 +19,13 @@ BEGIN {
 	}
 }
 
+sub _prompt {
+	my $msg = shift;
+	print STDERR "\e[1m$msg\e[m "; $|++;
+	chomp(my $resp = <STDIN>);
+	$resp;
+}
+
 my $UA = LWP::UserAgent->new;
 
 sub uri_split {
@@ -39,6 +46,21 @@ sub get {
 		return $resp->decoded_content // $resp->content;
 	} else {
 		_err("fetch failed: '".$resp->status_line."'");
+		return undef;
+	}
+}
+
+sub post {
+	my ($url, %form) = @_;
+
+	_debug("posting to '$url'");
+	my $resp = $UA->post($url, \%form);
+
+	if ($resp->is_success) {
+		_debug("post complete: '".$resp->status_line."'");
+		return $resp->decoded_content // $resp->content;
+	} else {
+		_err("post failed: '".$resp->status_line."'");
 		return undef;
 	}
 }
@@ -167,6 +189,14 @@ sub dl_0bin {
 	return $data;
 }
 
+sub sha1_hex {
+	eval {
+		require Crypt::Digest::SHA1;
+	} or _die("missing Perl package \"CryptX\"");
+
+	return Crypt::Digest::SHA1::sha1_hex(shift);
+}
+
 sub dl_ezcrypt {
 	my ($url, $frag) = @_;
 
@@ -174,10 +204,32 @@ sub dl_ezcrypt {
 		_die("cannot decrypt without key in URL fragment");
 	}
 
-	my $body = get($url);
-	$body =~ m{<input .+ id="data" value="(.+)" />}s || return;
+	my $password;
+	my $body;
+	my $data;
 
-	my $data = decode_base64($1);
+	$body = get($url);
+
+	while ($body =~ /<div id="askpassword">/) {
+		if (-t 0) {
+			_debug("paste is password-protected");
+			$password = _prompt("password?");
+		} else {
+			_die("paste is password-protected");
+		}
+		$body = post($url, p => sha1_hex($password)) || return;
+	}
+
+	if ($body =~ /DOCTYPE/) {
+		$body =~ m{<input .+ id="data" value="(.+)" />}s || return;
+		$data = $1;
+	}
+	elsif ($body =~ /^\{/) {
+		$data = decode_json($body);
+		$data = $data->{data};
+	}
+
+	$data = decode_base64($data);
 	$data = ez_decrypt($frag, $data);
 	return $data;
 }
