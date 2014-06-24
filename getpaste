@@ -5,7 +5,7 @@ use warnings;
 use strict;
 no locale;
 use JSON;
-use LWP::Simple;
+use LWP::UserAgent;
 use MIME::Base64;
 
 BEGIN {
@@ -19,11 +19,28 @@ BEGIN {
 	}
 }
 
+my $UA = LWP::UserAgent->new;
+
 sub uri_split {
 	my $str = shift;
 
 	# stolen from URI::Split
 	$str =~ m,(?:([^:/?#]+):)?(?://([^/?#]*))?([^?#]*)(?:\?([^#]*))?(?:#(.*))?,;
+}
+
+sub get {
+	my $url = shift;
+
+	_debug("fetching '$url'");
+	my $resp = $UA->get($url);
+
+	if ($resp->is_success) {
+		_debug("fetch complete: '".$resp->status_line."'");
+		return $resp->decoded_content // $resp->content;
+	} else {
+		_err("fetch failed: '".$resp->status_line."'");
+		return undef;
+	}
 }
 
 sub decode_html {
