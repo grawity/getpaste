@@ -259,7 +259,12 @@ for my $url (@ARGV) {
 		}
 	} else {
 		if ($handler) {
-			print $handler->($raw, @hargs)."\n";
+			my $output = $handler->($raw, @hargs);
+			if (defined $output) {
+				print "$output\n";
+			} else {
+				_err("paste extraction failed");
+			}
 		} else {
 			getprint $raw;
 		}
