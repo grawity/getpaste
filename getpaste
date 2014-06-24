@@ -90,9 +90,8 @@ sub sjcl_decrypt {
 	my $ts   = int($data->{ts} || 64) / 8;
 	my $hdr  = decode_base64($data->{adata} // "");
 
-	my $key = pbkdf2($frag, $salt, $iter, "SHA256", $ks);
-
-	my $tag = substr($ct, -$ts, $ts, "");
+	my $key  = pbkdf2($frag, $salt, $iter, "SHA256", $ks);
+	my $tag  = substr($ct, -$ts, $ts, "");
 
 	return ccm_decrypt_verify("AES", $key, $iv, $hdr, $ct, $tag)
 	       // _die("decryption failed");
@@ -162,10 +161,8 @@ sub dl_0bin {
 	$body =~ m{<code>\n\s*(\{.+\})\n\s*</code>} || return;
 
 	my $data = decode_html($1);
-	# the URL fragment is *not* decoded before passing to KDF
 	$data = sjcl_decrypt($frag, $data);
 	$data = decode_base64($data);
-	# currently 0bin does not compress with LZW anymore
 	#$data = lzw_decompress($data);
 	return $data;
 }
@@ -197,7 +194,6 @@ sub dl_zerobin {
 
 	my $data = decode_html($1);
 	$data = decode_json($data)->[0]->{data};
-	# the URL fragment is *not* decoded before passing to KDF
 	$data = sjcl_decrypt($frag, $data);
 	$data = decode_base64($data);
 	$data = deflate_decompress($data);
