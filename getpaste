@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# getpaste r12 - Retrieves raw text from a pastebin
+# getpaste r13 - Retrieves raw text from a pastebin
 # Released under WTFPL v2 <http://sam.zoy.org/wtfpl/>
 use warnings;
 use strict;
@@ -98,6 +98,26 @@ sub sjcl_decrypt {
 	       // _die("decryption failed");
 }
 
+sub ez_decrypt {
+	eval {
+		require Crypt::Cipher::AES;
+		require Crypt::Mode::OFB;
+		require Crypt::KeyDerivation;
+	} or _die("missing Perl package \"CryptX\"");
+
+	Crypt::KeyDerivation->import("pbkdf2");
+
+	my ($frag, $data) = @_;
+
+	my $salt = substr($data, 0, 16, "");
+	my $iv   = $salt;
+	my $iter = 1; # LOL
+	my $ks   = 256 / 8;
+	my $key  = pbkdf2($frag, $salt, $iter, "SHA1", $ks);
+
+	return Crypt::Mode::OFB->new("AES")->decrypt($data, $key, $iv);
+}
+
 sub lzw_decompress {
 	require Compress::LZW;
 
@@ -147,6 +167,21 @@ sub dl_0bin {
 	$data = decode_base64($data);
 	# currently 0bin does not compress with LZW anymore
 	#$data = lzw_decompress($data);
+	return $data;
+}
+
+sub dl_ezcrypt {
+	my ($url, $frag) = @_;
+
+	if (!length $frag) {
+		_die("cannot decrypt without key in URL fragment");
+	}
+
+	my $body = get($url);
+	$body =~ m{<input .+ id="data" value="(.+)" />}s || return;
+
+	my $data = decode_base64($1);
+	$data = ez_decrypt($frag, $data);
 	return $data;
 }
 
@@ -251,6 +286,9 @@ sub parse_url {
 
 	elsif ($host =~ /^(www\.)?irccloud\.com$/ and $path =~ m!^pastebin/(\w+)!)
 		{ "https://$host/pastebin/$1.raw" }
+
+	elsif ($host =~ /^ezcrypt\.it$/)
+		{ $url, \&dl_ezcrypt, $frag }
 
 	else
 		{ return undef }
