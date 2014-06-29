@@ -50,6 +50,15 @@ sub get {
 	}
 }
 
+sub getprint {
+	my ($url) = @_;
+
+	my $data = get($url);
+	if (defined $data) {
+		print $data;
+	}
+}
+
 sub post {
 	my ($url, %form) = @_;
 
