@@ -265,10 +265,10 @@ sub parse_url {
 	my ($url) = @_;
 	my ($scheme, $host, $path, $query, $frag) = uri_split $url;
 
-	_debug("scheme='".($scheme//"")."'".\
-		", host='".($host//"")."'".\
-		", path='".($path//"")."'".\
-		", query='".($query//"")."'".\
+	_debug("scheme='".($scheme//"")."'".
+		", host='".($host//"")."'".
+		", path='".($path//"")."'".
+		", query='".($query//"")."'".
 		", frag='".($frag//"")."'");
 
 	if (!defined($host) || !defined($path)) {
