@@ -4,6 +4,7 @@
 use warnings;
 use strict;
 no locale;
+use Getopt::Long qw(:config bundling no_ignore_case);
 use JSON;
 use LWP::UserAgent;
 use MIME::Base64;
@@ -12,7 +13,10 @@ BEGIN {
 	if (eval {require Nullroute::Lib}) {
 		Nullroute::Lib->import(qw(_debug _warn _err _die));
 	} else {
-		sub _debug { warn "debug: @_\n" if $ENV{DEBUG}; }
+		our ($arg0, $warnings, $errors);
+		$::arg0 = (split m!/!, $0)[-1];
+		$::debug = !!$ENV{DEBUG};
+		sub _debug { warn "debug: @_\n" if $::debug; }
 		sub _warn  { warn "warning: @_\n"; ++$::warnings; }
 		sub _err   { warn "error: @_\n"; ! ++$::errors; }
 		sub _die   { _err(@_); exit 1; }
@@ -351,13 +355,27 @@ sub parse_url {
 		{ return undef }
 }
 
-my $showurl = ($ARGV[0] eq "-u");
-shift @ARGV if $showurl;
+sub usage {
+	print "$_\n" for
+	"Usage: $::arg0 [-u] <url>",
+	"",                       #
+	"  -u, --show-url         Output only the URL of raw document",
+}
+
+# Option parsing
+
+my $showurl = 0;
+
+GetOptions(
+	"help"		=> sub { usage(); exit; },
+	"u|show-url"	=> \$showurl,
+) or exit 2;
 
 if (!@ARGV) {
-	warn "Usage: getpaste [-u] <url>\n";
-	exit 2;
+	_die("missing URL", 2);
 }
+
+# Main code
 
 for my $url (@ARGV) {
 	my ($raw, $handler, @hargs) = parse_url($url);
