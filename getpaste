@@ -364,15 +364,21 @@ sub usage {
 
 # Option parsing
 
+my $insecure = 0;
 my $showurl = 0;
 
 GetOptions(
 	"help"		=> sub { usage(); exit; },
+	"insecure"	=> \$insecure,
 	"u|show-url"	=> \$showurl,
 ) or exit 2;
 
 if (!@ARGV) {
 	_die("missing URL", 2);
+}
+
+if ($insecure) {
+	$UA->ssl_opts(verify_hostname => 0);
 }
 
 # Main code
