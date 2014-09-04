@@ -381,6 +381,10 @@ if ($insecure) {
 	$UA->ssl_opts(verify_hostname => 0);
 }
 
+unless ($ENV{PERL_LWP_SSL_CA_FILE} || $ENV{HTTPS_CA_FILE}) {
+	$UA->ssl_opts(SSL_ca_file => "/etc/ssl/certs/ca-certificates.crt");
+}
+
 # Main code
 
 for my $url (@ARGV) {
