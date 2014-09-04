@@ -254,7 +254,7 @@ sub dl_zerobin {
 		_die("cannot decrypt without key in URL fragment");
 	}
 
-	my $body = get($url);
+	my $body = get($url) // return;
 	$body =~ m{<div id="cipherdata" style="display:none;">(.+)</div>} || return;
 
 	my $data = decode_html($1);
