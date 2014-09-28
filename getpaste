@@ -290,6 +290,9 @@ sub parse_url {
 	elsif ($host =~ /^dpaste\.(org|de)$/ and $path =~ m!^(\w+)!)
 		{ return "http://$host/$1/raw/" }
 
+	elsif ($host =~ /^ghostbin\.com$/ and $path =~ m!^(paste/\w+)!)
+		{ return "$scheme://$host/$1/raw" }
+
 	elsif ($host =~ /^dpaste\.com$/ and $path =~ m!^(?:hold/)?(\d+)!)
 		{ return "http://$host/$1/plain/" }
 
