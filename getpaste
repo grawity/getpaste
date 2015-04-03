@@ -78,6 +78,14 @@ sub post {
 	}
 }
 
+sub _sour_decode_base64 {
+	my ($str) = @_;
+
+	$str =~ y!_-!/+!;
+	$str = decode_base64($str);
+	return $str;
+}
+
 sub decode_html {
 	my $str = shift;
 
@@ -331,12 +339,28 @@ sub dl_zerobin {
 }
 
 sub dl_sour {
+	eval {
+		require Crypt::Digest::RIPEMD160;
+	} or _die("missing Perl package \"CryptX\"");
+
+	Crypt::Digest::RIPEMD160->import("ripemd160");
+
 	my ($url, $frag) = @_;
 
 	my $body = get($url) // return;
-	$body =~ s/^.*?\n\n//s || return;
+	my @body = split(/\n\n/, $body);
 
-	my $data = decode_base64($body);
+	my %headers = map {/^(\S+):\s*(.*)$/} split(/\n/, $body[0]);
+	_debug("found header: $_='$headers{$_}'") for sort keys %headers;
+	if ($headers{chk}) {
+		my $k = _sour_decode_base64($frag);
+		my $c = _sour_decode_base64($headers{chk});
+		if (ripemd160($k) ne $c) {
+			_die("decryption failed (incorrect key)");
+		}
+	}
+
+	my $data = decode_base64($body[1]);
 	$data = sour_decrypt($frag, $data);
 	return $data;
 }
