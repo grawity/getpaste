@@ -7,7 +7,7 @@ no locale;
 use Getopt::Long qw(:config bundling no_ignore_case);
 use JSON;
 use LWP::UserAgent;
-use MIME::Base64;
+use MIME::Base64 qw(decode_base64);
 
 BEGIN {
 	if (eval {require Nullroute::Lib}) {
@@ -83,6 +83,12 @@ sub decode_sour_base64 {
 
 	$str =~ y!_-!/+!;
 	return decode_base64($str);
+}
+
+sub encode_base64 ($) {
+	my ($str) = @_;
+
+	return MIME::Base64::encode($str, "");
 }
 
 sub decode_html {
@@ -162,6 +168,8 @@ sub decrypt_sjcl {
 	my $key  = pbkdf2($frag, $salt, $iter, "SHA256", $ks);
 	my $tag  = substr($ct, -$ts, $ts, "");
 
+	_debug("key: {".encode_base64($key)."}, iv: {".encode_base64($iv)."}");
+
 	return ccm_decrypt_verify("AES", $key, $iv, $hdr, $ct, $tag)
 	       // _die("decryption failed");
 }
@@ -188,6 +196,8 @@ sub decrypt_ezcrypt {
 	my $iter = 1; # LOL
 	my $key  = pbkdf2($frag, $salt, $iter, "SHA1", $ks);
 	my $iv   = $salt;
+
+	_debug("key: {".encode_base64($key)."}, iv: {".encode_base64($iv)."}");
 
 	return Crypt::Mode::OFB->new("AES")->decrypt($data, $key, $iv);
 }
