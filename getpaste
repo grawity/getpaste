@@ -205,8 +205,8 @@ sub sour_decrypt {
 	my $magic = substr($data, 0, 8, "");
 	my $salt  = substr($data, 0, 8, "");
 	my $iter  = 1;
-	my $ks    = 256 / 8;
-	my $bs    = 128 / 8;
+	my $ks    = 256 / 8; # key size
+	my $bs    = 128 / 8; # block/IV size
 
 	if ($magic ne "Salted__") {
 		_die("bad magic value in encrypted data");
