@@ -177,8 +177,8 @@ sub sjcl_decrypt {
 sub ez_decrypt {
 	eval {
 		require Crypt::Cipher::AES;
-		require Crypt::Mode::OFB;
 		require Crypt::KeyDerivation;
+		require Crypt::Mode::OFB;
 	} or _die("missing Perl package \"CryptX\"");
 
 	Crypt::KeyDerivation->import("pbkdf2");
@@ -189,11 +189,13 @@ sub ez_decrypt {
 
 	my ($frag, $data) = @_;
 
-	my $salt = substr($data, 0, 16, "");
-	my $iv   = $salt;
+	my $ks   = Crypt::Cipher::AES->keysize;
+	my $bs   = Crypt::Cipher::AES->blocksize;
+
+	my $salt = substr($data, 0, $bs, "");
 	my $iter = 1; # LOL
-	my $ks   = 256 / 8;
 	my $key  = pbkdf2($frag, $salt, $iter, "SHA1", $ks);
+	my $iv   = $salt;
 
 	return Crypt::Mode::OFB->new("AES")->decrypt($data, $key, $iv);
 }
@@ -210,16 +212,15 @@ sub sour_decrypt {
 
 	my ($frag, $data) = @_;
 
+	my $ks    = Crypt::Cipher::AES->keysize;
+	my $bs    = Crypt::Cipher::AES->blocksize;
+
 	my $magic = substr($data, 0, 8, "");
 	my $salt  = substr($data, 0, 8, "");
-	my $iter  = 1;
-	my $ks    = 256 / 8; # key size
-	my $bs    = 128 / 8; # block/IV size
 
 	if ($magic ne "Salted__") {
 		_die("bad magic value in encrypted data");
 	}
-
 	my ($key, $iv) = EVP_BytesToKey($salt, $frag, $ks, $bs);
 
 	return Crypt::Mode::CBC->new("AES")->decrypt($data, $key, $iv);
