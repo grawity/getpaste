@@ -228,25 +228,30 @@ sub decompress_lzw {
 
 sub decompress_deflate {
 	eval {
-		require Compress::Zlib;
-	} or _die("missing Perl package 'Compress::Zlib'");
+		require Compress::Raw::Zlib;
+	} or _die("missing Perl package 'Compress::Raw::Zlib'");
 
-	my ($buf) = @_;
+	my ($buf, %opt) = @_;
 
-	my ($stream, $outbuf, $status);
+	my $wbits;
+	my $stream;
+	my $status;
+	my $outbuf;
 
-	($stream, $status) = Compress::Zlib::inflateInit(
-		-WindowBits => -Compress::Zlib->MAX_WBITS,
-	);
+	if ($opt{is_gzip}) {
+		$wbits = Compress::Raw::Zlib->WANT_GZIP;
+	} else {
+		$wbits = -Compress::Raw::Zlib->MAX_WBITS;
+	}
 
-	if (!defined $stream || $status != Compress::Zlib->Z_OK) {
+	($stream, $status) = Compress::Raw::Zlib::Inflate->new(-WindowBits => $wbits);
+	if ($status != Compress::Raw::Zlib->Z_OK) {
 		_die("inflateInit failed: $status");
 	}
 
-	($outbuf, $status) = $stream->inflate($buf);
-
-	if (!defined $outbuf || ($status != Compress::Zlib->Z_OK &&
-		                 $status != Compress::Zlib->Z_STREAM_END)) {
+	$status = $stream->inflate($buf, $outbuf);
+	if ($status != Compress::Raw::Zlib->Z_OK &&
+	    $status != Compress::Raw::Zlib->Z_STREAM_END) {
 		_die("inflate failed: $status (".$stream->msg.")");
 	}
 
@@ -254,17 +259,9 @@ sub decompress_deflate {
 }
 
 sub decompress_gzip {
-	eval {
-		require Compress::Zlib;
-	} or _die("missing Perl package 'Compress::Zlib'");
-
 	my ($buf) = @_;
 
-	my $outbuf = Compress::Zlib::memGunzip($buf);
-	if (!defined $outbuf) {
-		_die("decompression failed");
-	}
-	return $outbuf;
+	return decompress_deflate($buf, is_gzip => 1);
 }
 
 sub dl_0bin {
