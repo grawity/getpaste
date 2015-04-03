@@ -132,7 +132,7 @@ sub EVP_BytesToKey {
 	return ($key, $iv);
 }
 
-sub sjcl_decrypt {
+sub decrypt_sjcl {
 	eval {
 		require Crypt::AuthEnc::CCM;
 		require Crypt::KeyDerivation;
@@ -174,7 +174,7 @@ sub sjcl_decrypt {
 	       // _die("decryption failed");
 }
 
-sub ez_decrypt {
+sub decrypt_ezcrypt {
 	eval {
 		require Crypt::Cipher::AES;
 		require Crypt::KeyDerivation;
@@ -200,7 +200,7 @@ sub ez_decrypt {
 	return Crypt::Mode::OFB->new("AES")->decrypt($data, $key, $iv);
 }
 
-sub sour_decrypt {
+sub decrypt_sour {
 	eval {
 		require Crypt::Cipher::AES;
 		require Crypt::Mode::CBC;
@@ -226,7 +226,7 @@ sub sour_decrypt {
 	return Crypt::Mode::CBC->new("AES")->decrypt($data, $key, $iv);
 }
 
-sub lzw_decompress {
+sub decompress_lzw {
 	require Compress::LZW;
 
 	my ($buf) = @_;
@@ -234,7 +234,7 @@ sub lzw_decompress {
 	return Compress::LZW->decompress($buf);
 }
 
-sub deflate_decompress {
+sub decompress_deflate {
 	require Compress::Zlib;
 
 	my ($buf) = @_;
@@ -270,9 +270,9 @@ sub dl_0bin {
 	$body =~ m{<code>\n\s*(\{.+\})\n\s*</code>} || return;
 
 	my $data = decode_html($1);
-	$data = sjcl_decrypt($frag, $data);
+	$data = decrypt_sjcl($frag, $data);
 	$data = decode_base64($data);
-	#$data = lzw_decompress($data);
+	#$data = decompress_lzw($data);
 	return $data;
 }
 
@@ -317,7 +317,7 @@ sub dl_ezcrypt {
 	}
 
 	$data = decode_base64($data);
-	$data = ez_decrypt($frag, $data);
+	$data = decrypt_ezcrypt($frag, $data);
 	return $data;
 }
 
@@ -333,9 +333,9 @@ sub dl_zerobin {
 
 	my $data = decode_html($1);
 	$data = decode_json($data)->[0]->{data};
-	$data = sjcl_decrypt($frag, $data);
+	$data = decrypt_sjcl($frag, $data);
 	$data = decode_base64($data);
-	$data = deflate_decompress($data);
+	$data = decompress_deflate($data);
 	return $data;
 }
 
@@ -362,7 +362,7 @@ sub dl_sour {
 	}
 
 	my $data = decode_base64($body[1]);
-	$data = sour_decrypt($frag, $data);
+	$data = decrypt_sour($frag, $data);
 	return $data;
 }
 
