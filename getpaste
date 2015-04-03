@@ -104,7 +104,7 @@ sub try_decode_json {
 sub EVP_BytesToKey {
 	eval {
 		require Crypt::Digest::MD5;
-	} or _die("missing Perl package \"CryptX\"");
+	} or _die("missing Perl package 'CryptX'");
 
 	Crypt::Digest::MD5->import("md5");
 
@@ -128,7 +128,7 @@ sub decrypt_sjcl {
 	eval {
 		require Crypt::AuthEnc::CCM;
 		require Crypt::KeyDerivation;
-	} or _die("missing Perl package \"CryptX\"");
+	} or _die("missing Perl package 'CryptX'");
 
 	Crypt::AuthEnc::CCM->import(":all");
 	Crypt::KeyDerivation->import("pbkdf2");
@@ -171,7 +171,7 @@ sub decrypt_ezcrypt {
 		require Crypt::Cipher::AES;
 		require Crypt::KeyDerivation;
 		require Crypt::Mode::OFB;
-	} or _die("missing Perl package \"CryptX\"");
+	} or _die("missing Perl package 'CryptX'");
 
 	Crypt::KeyDerivation->import("pbkdf2");
 
@@ -196,7 +196,7 @@ sub decrypt_sour {
 	eval {
 		require Crypt::Cipher::AES;
 		require Crypt::Mode::CBC;
-	} or _die("missing Perl package \"CryptX\"");
+	} or _die("missing Perl package 'CryptX'");
 
 	# serialization: raw [magic + salt + data]
 	# key derivation: EVP_BytesToKey (MD5)
@@ -219,7 +219,9 @@ sub decrypt_sour {
 }
 
 sub decompress_lzw {
-	require Compress::LZW;
+	eval {
+		require Compress::LZW;
+	} or _die("missing Perl package 'Compress::LZW'");
 
 	my ($buf) = @_;
 
@@ -284,7 +286,7 @@ sub dl_0bin {
 sub dl_ezcrypt {
 	eval {
 		require Crypt::Digest::SHA1;
-	} or _die("missing Perl package \"CryptX\"");
+	} or _die("missing Perl package 'CryptX'");
 
 	Crypt::Digest::SHA1->import("sha1_hex");
 
@@ -345,7 +347,7 @@ sub dl_zerobin {
 sub dl_sour {
 	eval {
 		require Crypt::Digest::RIPEMD160;
-	} or _die("missing Perl package \"CryptX\"");
+	} or _die("missing Perl package 'CryptX'");
 
 	Crypt::Digest::RIPEMD160->import("ripemd160");
 
