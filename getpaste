@@ -103,6 +103,10 @@ sub sjcl_decrypt {
 	Crypt::AuthEnc::CCM->import(":all");
 	Crypt::KeyDerivation->import("pbkdf2");
 
+	# serialization: JSON
+	# key derivation: PBKDF2-SHA256
+	# encryption: AES128-CCM
+
 	my ($frag, $json) = @_;
 
 	my $data = try_decode_json($json);
@@ -121,8 +125,8 @@ sub sjcl_decrypt {
 	my $ct   = decode_base64($data->{ct});
 	my $iv   = decode_base64($data->{iv});
 	my $iter = int($data->{iter} || 1000),
-	my $ks   = int($data->{ks} || 128) / 8;
-	my $ts   = int($data->{ts} || 64) / 8;
+	my $ks   = int($data->{ks} || 128) / 8; # key size
+	my $ts   = int($data->{ts} || 64) / 8; # tag size
 	my $hdr  = decode_base64($data->{adata} // "");
 
 	my $key  = pbkdf2($frag, $salt, $iter, "SHA256", $ks);
@@ -140,6 +144,10 @@ sub ez_decrypt {
 	} or _die("missing Perl package \"CryptX\"");
 
 	Crypt::KeyDerivation->import("pbkdf2");
+
+	# serialization: raw [salt + data]
+	# key derivation: PBKDF2-SHA1
+	# encryption: AES-256-OFB
 
 	my ($frag, $data) = @_;
 
