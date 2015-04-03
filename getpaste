@@ -78,12 +78,11 @@ sub post {
 	}
 }
 
-sub _sour_decode_base64 {
+sub decode_sour_base64 {
 	my ($str) = @_;
 
 	$str =~ y!_-!/+!;
-	$str = decode_base64($str);
-	return $str;
+	return decode_base64($str);
 }
 
 sub decode_html {
@@ -99,14 +98,7 @@ sub decode_html {
 sub try_decode_json {
 	my $data = shift;
 
-	ref $data ? $data : decode_json($data);
-}
-
-sub dump_hex {
-	my $data = shift;
-
-	require Data::HexDump;
-	print Data::HexDump::HexDump($data);
+	return ref $data ? $data : decode_json($data);
 }
 
 sub EVP_BytesToKey {
@@ -276,15 +268,13 @@ sub dl_0bin {
 	return $data;
 }
 
-sub sha1_hex {
+sub dl_ezcrypt {
 	eval {
 		require Crypt::Digest::SHA1;
 	} or _die("missing Perl package \"CryptX\"");
 
-	return Crypt::Digest::SHA1::sha1_hex(shift);
-}
+	Crypt::Digest::SHA1->import("sha1_hex");
 
-sub dl_ezcrypt {
 	my ($url, $frag) = @_;
 
 	if (!length $frag) {
@@ -354,8 +344,8 @@ sub dl_sour {
 	my %headers = map {/^(\S+):\s*(.*)$/} split(/\n/, $body[0]);
 	_debug("found header: $_='$headers{$_}'") for sort keys %headers;
 	if ($headers{chk}) {
-		my $k = _sour_decode_base64($frag);
-		my $c = _sour_decode_base64($headers{chk});
+		my $k = decode_sour_base64($frag);
+		my $c = decode_sour_base64($headers{chk});
 		if (ripemd160($k) ne $c) {
 			_die("decryption failed (incorrect key)");
 		}
