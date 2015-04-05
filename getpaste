@@ -1,6 +1,8 @@
 #!/usr/bin/env perl
-# getpaste r13 - Retrieves raw text from a pastebin
-# Released under WTFPL v2 <http://sam.zoy.org/wtfpl/>
+# getpaste - retrieves raw text from pastebins
+#
+# (c) 2010-2015 Mantas Mikulėnas <grawity@gmail.com>
+# Released under the MIT license (see dist/LICENSE.mit)
 use warnings;
 use strict;
 no locale;
