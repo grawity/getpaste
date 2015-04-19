@@ -444,29 +444,31 @@ sub parse_url {
 	elsif ($host =~ /^hastebin\.com$/ and $path =~ m!^(\w+)!)
 		{ "http://hastebin.com/raw/$1" }
 
-	elsif ($host =~ /^0bin\.net$/)
-		{ $url, \&dl_0bin, $frag }
-
-	elsif ($host =~ /^(zerobin\.net|(pastebin\.aquilenet|paste\.necronomicon)\.fr|p\.mehl\.mx)$/)
-		{ $url, \&dl_zerobin, $frag }
-
-	elsif ($host =~ /^sebsauvage\.net$/ and $path =~ m!^paste/!)
-		{ $url, \&dl_zerobin, $frag }
-
-	elsif ($url =~ m!^zerobin\+(https?://.+)$!)
-		{ $1, \&dl_zerobin, $frag }
-
 	elsif ($host =~ /^www\.dropbox\.com$/)
 		{ "https://dl.dropboxusercontent.com/$path" }
 
 	elsif ($host =~ /^(www\.)?irccloud\.com$/ and $path =~ m!^pastebin/(\w+)!)
 		{ "https://$host/pastebin/$1.raw" }
 
+	# cryptobins
+
+	elsif ($host =~ /^0bin\.net$/)
+		{ $url, \&dl_0bin, $frag }
+
 	elsif ($host =~ /^ezcrypt\.it$/)
 		{ $url, \&dl_ezcrypt, $frag }
 
 	elsif ($host =~ /^sour\.is$/ and $path eq "p/" and $frag =~ m{^/(.+)!(.+)})
 		{ "https://sour.is/p.store/$1", \&dl_sour, $2 }
+
+	elsif ($url =~ m{^zerobin\+(https?://.+)$})
+		{ $1, \&dl_zerobin, $frag }
+
+	elsif ($query =~ /^[0-9a-f]{16}$/ && $frag =~ m{^[0-9A-Za-z+/]{43}=$})
+		{ _debug("probably a ZeroBin site based on query & fragment");
+		  $url, \&dl_zerobin, $frag }
+
+	# final
 
 	else
 		{ return undef }
