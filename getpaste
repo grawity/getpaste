@@ -11,6 +11,7 @@ use JSON;
 use LWP::UserAgent;
 use MIME::Base64;
 
+# CORE FUNCTIONS {{{
 # generic utility functions {{{
 
 BEGIN {
@@ -200,6 +201,7 @@ sub post {
 	}
 }
 
+# }}}
 # }}}
 # DECRYPTORS {{{
 
