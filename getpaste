@@ -492,22 +492,19 @@ sub unparse_url {
 sub translate_paste_url {
 	my ($url) = @_;
 
+	my @fields = qw(scheme host path query fragment);
+
 	my %url = parse_url($url);
 
 	unless (%url && defined($url{host}) && defined($url{path})) {
 		_die("bad URL: $url");
 	}
 
-	my @fields = qw(scheme host path query frag);
-	my %values = %url;
-
-	_debug("scheme='".($+{scheme}//"")."'".
-		", host='".($+{host}//"")."'".
-		", path='".($+{path}//"")."'".
-		", query='".($+{query}//"")."'".
-		", frag='".($+{fragment}//"")."'");
-
-	my ($scheme, $host, $path, $query, $frag) = @values{@fields};
+	_debug("scheme='".($url{scheme}//"")."'".
+		", host='".($url{host}//"")."'".
+		", path='".($url{path}//"")."'".
+		", query='".($url{query}//"")."'".
+		", frag='".($url{fragment}//"")."'");
 
 SITE:	for my $site (@sites) {
 		use Data::Dumper;
@@ -515,7 +512,7 @@ SITE:	for my $site (@sites) {
 		my %match;
 		for (@fields) {
 			my $pat = $site->{"$_"} or next;
-			my @res = smart_match($values{$_}, $pat) or next SITE;
+			my @res = smart_match($url{$_}, $pat) or next SITE;
 			$match{$_} = \@res;
 		}
 		next if !%match;
@@ -526,18 +523,25 @@ SITE:	for my $site (@sites) {
 		for (@fields) {
 			my $fmt = $site->{"to_$_"} or next;
 			$fmt =~ s/#(#|\d|\{\w+.\d+\})/expn($1, \%match, "path")/ge;
-			$values{$_} = $fmt;
+			$url{$_} = $fmt;
 		}
 
-		print Dumper(\%values);
+		print Dumper(\%url);
 
-		my $url = unparse_url(%values);
+		my $url = unparse_url(%url);
 		print "=> $url\n";
 
-		# TODO: to_func
-
-		return $url;
+		my $func = $site->{"to_func"};
+		if ($func) {
+			return ($url, $func, $url{fragment});
+		} else {
+			return ($url);
+		}
 	}
+
+	# old matching
+
+	my ($scheme, $host, $path, $query, $frag) = @url{@fields};
 
 	$path =~ s|^/||;
 	$query //= "";
