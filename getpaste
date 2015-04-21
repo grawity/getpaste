@@ -34,14 +34,6 @@ sub _prompt {
 
 my $UA = LWP::UserAgent->new;
 
-my $URL_RE = qr{
-		(?:    (?<scheme> [^:\/?\#]+) : )?
-		(?: // (?<host> [^/?#]*)        )?
-		       (?<path> [^?#]*)
-		(?: \? (?<query> [^#]*)         )?
-		(?: \# (?<fragment> .*)         )?
-	}x;
-
 sub get {
 	my $url = shift;
 
@@ -465,6 +457,8 @@ sub smart_match {
 	return;
 }
 
+my $EXPN_RE = qr/#(#|\d|\{\w+.\d+\})/;
+
 sub expn {
 	my ($str, $data, $def) = @_;
 
@@ -481,6 +475,14 @@ sub expn {
 		}
 	}
 };
+
+my $URL_RE = qr{
+		(?:    (?<scheme> [^:\/?\#]+) : )?
+		(?: // (?<host> [^/?#]*)        )?
+		       (?<path> [^?#]*)
+		(?: \? (?<query> [^#]*)         )?
+		(?: \# (?<fragment> .*)         )?
+	}x;
 
 sub parse_url {
 	my ($url) = @_;
@@ -531,7 +533,7 @@ SITE:	for my $site (@sites) {
 
 		for (@fields) {
 			my $fmt = $site->{"to_$_"} or next;
-			$fmt =~ s/#(#|\d|\{\w+.\d+\})/expn($1, \%match, "path")/ge;
+			$fmt =~ s/$EXPN_RE/expn($1, \%match, "path")/ge;
 			$url{$_} = $fmt;
 		}
 
