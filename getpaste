@@ -457,10 +457,26 @@ sub smart_match {
 	return;
 }
 
+sub expn {
+	my ($str, $data, $def) = @_;
+
+	for ($str) {
+		if ($def && /^(\d+)$/) {
+			return $data->{$def}->[$1] // "";
+		}
+		elsif (/^(\w+).(\d+)$/) {
+			return $data->{$1}->[$2] // "";
+		}
+		else {
+			return "?<$_>";
+		}
+	}
+};
+
 sub parse_url {
 	my ($url) = @_;
 
-	unless ($url =~ $URI_RE && defined($+{host}) && defined($+{path}) {
+	unless ($url =~ $URI_RE && defined($+{host}) && defined($+{path})) {
 		_die("bad URL: $url");
 	}
 
@@ -490,6 +506,15 @@ SITE:	for my $site (@sites) {
 
 		print Dumper($site);
 		print Dumper(\%match);
+
+		# apply translations to each component
+
+		for (@fields) {
+			my $fmt = $site->{"to_$_"} or next;
+			$fmt =~ s/#(#|\d|\{\w+.\d+\})/expn($1, \%match, "path")/ge;
+			$values{$_} = $fmt;
+		}
+
 		print Dumper(\%values);
 
 		exit;
