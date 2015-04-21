@@ -473,7 +473,7 @@ sub expn {
 	}
 };
 
-sub parse_url {
+sub translate_paste_url {
 	my ($url) = @_;
 
 	unless ($url =~ $URI_RE && defined($+{host}) && defined($+{path})) {
@@ -598,7 +598,7 @@ unless ($ENV{PERL_LWP_SSL_CA_FILE} || $ENV{HTTPS_CA_FILE}) {
 # Main code
 
 for my $url (@ARGV) {
-	my ($raw, $handler, @hargs) = parse_url($url);
+	my ($raw, $handler, @hargs) = translate_paste_url($url);
 	if (!defined $raw && !defined $handler) {
 		_err("unknown pastebin: $url");
 	} elsif ($showurl) {
