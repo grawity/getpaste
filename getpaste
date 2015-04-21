@@ -472,11 +472,12 @@ sub expn {
 		if ($def && /^(\d+)$/) {
 			return $data->{$def}->[$1] // "";
 		}
-		elsif (/^(\w+).(\d+)$/) {
+		elsif (/^\{(\w+).(\d+)\}$/) {
 			return $data->{$1}->[$2] // "";
 		}
 		else {
-			return "?<$_>";
+			_err("unknown expansion '#$_'");
+			return "\x{1F612}";
 		}
 	}
 };
