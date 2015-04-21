@@ -436,20 +436,63 @@ my @sites = (
 	},
 );
 
+sub smart_match {
+	my ($str, $pattern) = @_;
+
+	if (ref($pattern) eq "ARRAY") {
+		for (@$pattern) {
+			my @res = smart_match($str, $_);
+			return @res if @res;
+		}
+	}
+	elsif (ref($pattern) eq "Regexp" && $str =~ $pattern) {
+		# If $pattern has no capture groups, =~ will return an
+		# (1,) in list context since it needs a trueish value.
+		# This piece linenoise works consistently in all cases.
+		return map {substr($str, $-[$_], $+[$_]-$-[$_])} 0..$#-;
+	}
+	elsif (ref($pattern) eq "" && $str eq $pattern) {
+		return $str;
+	}
+	return;
+}
+
 sub parse_url {
 	my ($url) = @_;
 
-	my @m = ($url =~ $URI_RE);
-	my ($scheme, $host, $path, $query, $frag) = @m;
-
-	_debug("scheme='".($scheme//"")."'".
-		", host='".($host//"")."'".
-		", path='".($path//"")."'".
-		", query='".($query//"")."'".
-		", frag='".($frag//"")."'");
-
-	if (!defined($host) || !defined($path)) {
+	unless ($url =~ $URI_RE && defined($+{host}) && defined($+{path}) {
 		_die("bad URL: $url");
+	}
+
+	my @fields = qw(scheme host path query frag);
+	my %values = %+;
+
+	_debug("scheme='".($+{scheme}//"")."'".
+		", host='".($+{host}//"")."'".
+		", path='".($+{path}//"")."'".
+		", query='".($+{query}//"")."'".
+		", frag='".($+{fragment}//"")."'");
+
+	my ($scheme, $host, $path, $query, $frag) = @values{@fields};
+
+SITE:	for my $site (@sites) {
+		use Data::Dumper;
+
+		# match against old URI components
+
+		my %match;
+		for (@fields) {
+			my $pat = $site->{"$_"} or next;
+			my @res = smart_match($values{$_}, $pat) or next SITE;
+			$match{$_} = \@res;
+		}
+		next if !%match;
+
+		print Dumper($site);
+		print Dumper(\%match);
+		print Dumper(\%values);
+
+		exit;
 	}
 
 	$path =~ s|^/||;
