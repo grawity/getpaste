@@ -134,6 +134,8 @@ SITE:	for my $site (@SITES) {
 		}
 		next if !%match;
 
+		if ($site->{"note"}) { _debug("match found: ".$site->{"note"}); }
+
 		for (@fields) {
 			my $fmt = $site->{"to_$_"} or next;
 			$fmt =~ s/$EXPN_RE/expn($1, \%match, $_)/ge;
