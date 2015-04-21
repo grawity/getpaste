@@ -497,8 +497,16 @@ sub dl_sour {
 # SITE DATABASE {{{
 
 @SITES = (
+	# generic (forced)
 	{
-		host => "sprunge.us",
+		scheme => qr/^zerobin\+(https?)$/,
+		to_scheme => "#1",
+		parser => \&dl_zerobin,
+	},
+	# domain
+	{
+		host => "0bin.net",
+		parser => \&dl_0bin,
 	},
 	{
 		host => qr/^(dark-)?code\.bulix\.org$/,
@@ -522,6 +530,10 @@ sub dl_sour {
 	{
 		host => "www.dropbox.com",
 		to_host => "dl.dropboxusercontent.com",
+	},
+	{
+		host => "ezcrypt.it",
+		parser => \&dl_ezcrypt,
 	},
 	{
 		host => "paste.fedoraproject.org",
@@ -576,15 +588,6 @@ sub dl_sour {
 		path => qr!^/(\w+)!,
 		to_path => "/download/#1",
 	},
-	# cryptobins
-	{
-		host => "0bin.net",
-		parser => \&dl_0bin,
-	},
-	{
-		host => "ezcrypt.it",
-		parser => \&dl_ezcrypt,
-	},
 	{
 		host => "sour.is",
 		path => "/p/",
@@ -594,10 +597,9 @@ sub dl_sour {
 		parser => \&dl_sour,
 	},
 	{
-		scheme => qr/^zerobin\+(https?)$/,
-		to_scheme => "#1",
-		parser => \&dl_zerobin,
+		host => "sprunge.us",
 	},
+	# generic (wild guess)
 	{
 		query => qr/^[0-9a-f]{16}$/,
 		fragment => qr{^[0-9A-Za-z+/]{43}=$},
