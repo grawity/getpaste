@@ -377,6 +377,65 @@ sub dl_sour {
 	return $data;
 }
 
+my @sites = (
+	{
+		host => "sprunge.us",
+	},
+	{
+		host => "codepad.org",
+		path => qr!^(/\w+)!,
+		to_path => "#1/raw.txt",
+	},
+	{
+		host => "dpaste.com",
+		path => qr!^(?:/hold)?(/\d+)!,
+		to_path => "#1/plain/",
+	},
+	{
+		host => ["dpaste.org", "dpaste.de"],
+		path => qr!^(/\w+)!,
+		to_path => "#1/raw/",
+	},
+	{
+		host => "fpaste.org",
+		path => qr!^(/\w+(?:/\d+)?)!,
+		to_path => "#1/raw/",
+	},
+	{
+		host => "ghostbin.com",
+		path => qr!^(/paste/\w+)!,
+		to_path => "#1/raw",
+	},
+	{
+		host => "gist.github.com",
+		to_path => "#0.txt",
+	},
+	{
+		host => qr/^(www\.)?irccloud\.com$/,
+		path => qr!^(/pastebin/\w+)!,
+		to_path => "#1.raw",
+	},
+	{
+		host => "pastebin.com",
+		path => qr!^(?:/index)?/(\w+)!,
+		to_path => "/download.php?i=#1",
+	},
+	{
+		host => "pastie.org",
+		path => qr!^/(\d+)!,
+		to_path => "/pastes/#1/download",
+	},
+	# cryptobins
+	{
+		host => "0bin.net",
+		to_func => \&dl_0bin,
+	},
+	{
+		host => "ezcrypt.it",
+		to_func => \&dl_ezcrypt,
+	},
+);
+
 sub parse_url {
 	my ($url) = @_;
 
@@ -399,39 +458,11 @@ sub parse_url {
 	if ($host =~ /^sprunge\.us$/)
 		{ return $url }
 
-	elsif ($host =~ /^codepad\.org$/ and $path =~ m!^(\w+)!)
-		{ return "$scheme://$host/$1/raw.txt" }
-
-	elsif ($host =~ /^dpaste\.(org|de)$/ and $path =~ m!^(\w+)!)
-		{ return "$scheme://$host/$1/raw/" }
-
-	elsif ($host =~ /^ghostbin\.com$/ and $path =~ m!^(paste/\w+)!)
-		{ return "$scheme://$host/$1/raw" }
-
-	elsif ($host =~ /^dpaste\.com$/ and $path =~ m!^(?:hold/)?(\d+)!)
-		{ return "$scheme://$host/$1/plain/" }
-
 	elsif ($host =~ /^(?:[\w-]+\.)?pastebin\.ca$/ and $path =~ m!^(?:raw/)?(\d+)!)
 		{ return "$scheme://$host/raw/$1" }
 
-	elsif ($host =~ /^pastebin\.com$/ and $path =~ m!^(?:index/)?(\w+)!)
-		{ return "$scheme://$host/download.php?i=$1" }
-
-	elsif ($host =~ /^pastebin(\.centos|\.mozilla)?\.org$/
-		and $path =~ m!^(?:pastebin\.php\?dl=)?(\d+)!)
-		{ return "$scheme://$host/pastebin.php?dl=$1" }
-
-	elsif ($host =~ /^paste\.linuxassist\.net$/ and $path =~ m!(\d+)!)
-		{ return "$scheme://linux:linux\@$host/pastebin.php?raw=$1" }
-
-	elsif ($host =~ /^pastie\.org$/ and $path =~ m!^(\d+)!)
-		{ return "$scheme://$host/pastes/$1/download" }
-
 	elsif ($host =~ /(?:dark-)?code\.bulix\.org$/ and $path =~ m!^(\w+-\d+)!)
 		{ return "$scheme://$host/$1?raw" }
-
-	elsif ($host =~ /^fpaste\.org$/ and $path =~ m!^(\w+(?:/\d+)?)!)
-		{ return "$scheme://$host/$1/raw/" }
 
 	elsif ($host =~ /^paste\.fedoraproject\.org$/)
 		{ return "$scheme://$host/$path/raw" }
@@ -442,25 +473,13 @@ sub parse_url {
 	elsif ($host =~ /^privatepaste\.com$/ and $path =~ m!^(\w+)!)
 		{ return "$scheme://$host/download/$1" }
 
-	elsif ($host =~ /^gist\.github\.com$/)
-		{ return "$scheme://$host/$path.txt" }
-
 	elsif ($host =~ /^hastebin\.com$/ and $path =~ m!^(\w+)!)
-		{ "$scheme://hastebin.com/raw/$1" }
+		{ return "$scheme://hastebin.com/raw/$1" }
 
 	elsif ($host =~ /^www\.dropbox\.com$/)
 		{ "$scheme://dl.dropboxusercontent.com/$path" }
 
-	elsif ($host =~ /^(www\.)?irccloud\.com$/ and $path =~ m!^pastebin/(\w+)!)
-		{ "$scheme://$host/pastebin/$1.raw" }
-
 	# cryptobins
-
-	elsif ($host =~ /^0bin\.net$/)
-		{ $url, \&dl_0bin, $frag }
-
-	elsif ($host =~ /^ezcrypt\.it$/)
-		{ $url, \&dl_ezcrypt, $frag }
 
 	elsif ($host =~ /^sour\.is$/ and $path eq "p/" and $frag =~ m{^/(.+)!(.+)})
 		{ "$scheme://sour.is/p.store/$1", \&dl_sour, $2 }
