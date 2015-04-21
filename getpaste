@@ -463,13 +463,13 @@ sub expn {
 	my ($str, $data, $def) = @_;
 
 	for ($str) {
-		if ($def && /^(\d+)$/) {
+		if ($_ eq "#") {
+			return $_;
+		} elsif ($def && /^(\d+)$/) {
 			return $data->{$def}->[$1] // "";
-		}
-		elsif (/^\{(\w+).(\d+)\}$/) {
+		} elsif (/^\{(\w+).(\d+)\}$/) {
 			return $data->{$1}->[$2] // "";
-		}
-		else {
+		} else {
 			_err("unknown expansion '#$_'");
 			return "\x{1F612}";
 		}
