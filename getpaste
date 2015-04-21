@@ -434,6 +434,14 @@ my @sites = (
 		host => "ezcrypt.it",
 		to_func => \&dl_ezcrypt,
 	},
+	{
+		host => "sour.is",
+		path => "/p/",
+		fragment => qr{^/(.+)!(.+)},
+		to_path => "/p.store/#{fragment.1}",
+		to_fragment => "#{fragment.2}",
+		to_func => \&dl_sour,
+	},
 );
 
 sub smart_match {
@@ -571,9 +579,6 @@ SITE:	for my $site (@sites) {
 		{ "$scheme://dl.dropboxusercontent.com/$path" }
 
 	# cryptobins
-
-	elsif ($host =~ /^sour\.is$/ and $path eq "p/" and $frag =~ m{^/(.+)!(.+)})
-		{ "$scheme://sour.is/p.store/$1", \&dl_sour, $2 }
 
 	elsif ($url =~ m{^zerobin\+(https?://.+)$})
 		{ $1, \&dl_zerobin, $frag }
