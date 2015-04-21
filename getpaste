@@ -34,7 +34,7 @@ sub _prompt {
 
 my $UA = LWP::UserAgent->new;
 
-my $URI_RE = qr{
+my $URL_RE = qr{
 		(?:    (?<scheme> [^:\/?\#]+) : )?
 		(?: // (?<host> [^/?#]*)        )?
 		       (?<path> [^?#]*)
@@ -473,33 +473,33 @@ sub expn {
 	}
 };
 
-sub parse_uri {
-	my ($uri) = @_;
+sub parse_url {
+	my ($url) = @_;
 
-	if ($uri =~ $URI_RE) { return %+; }
+	if ($url =~ $URL_RE) { return %+; }
 }
 
-sub unparse_uri {
-	my (%uri) = @_;
+sub unparse_url {
+	my (%url) = @_;
 
-	my $uri = $uri{scheme}."://".$uri{host};
-	$uri .= $uri{path}         if defined($uri{path});
-	$uri .= "?".$uri{query}    if defined($uri{query});
-	$uri .= "#".$uri{fragment} if defined($uri{fragment});
-	return $uri;
+	my $url = $url{scheme}."://".$url{host};
+	$url .= $url{path}         if defined($url{path});
+	$url .= "?".$url{query}    if defined($url{query});
+	$url .= "#".$url{fragment} if defined($url{fragment});
+	return $url;
 }
 
 sub translate_paste_url {
 	my ($url) = @_;
 
-	my %uri = parse_uri($url);
+	my %url = parse_url($url);
 
-	unless (%uri && defined($uri{host}) && defined($uri{path})) {
+	unless (%url && defined($url{host}) && defined($url{path})) {
 		_die("bad URL: $url");
 	}
 
 	my @fields = qw(scheme host path query frag);
-	my %values = %uri;
+	my %values = %url;
 
 	_debug("scheme='".($+{scheme}//"")."'".
 		", host='".($+{host}//"")."'".
@@ -531,12 +531,12 @@ SITE:	for my $site (@sites) {
 
 		print Dumper(\%values);
 
-		my $uri = unparse_uri(%values);
-		print "=> $uri\n";
+		my $url = unparse_url(%values);
+		print "=> $url\n";
 
 		# TODO: to_func
 
-		return $uri;
+		return $url;
 	}
 
 	$path =~ s|^/||;
