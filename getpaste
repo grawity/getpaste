@@ -571,20 +571,13 @@ SITE:	for my $site (@sites) {
 		}
 		next if !%match;
 
-		print Dumper($site);
-		print Dumper(\%match);
-
 		for (@fields) {
 			my $fmt = $site->{"to_$_"} or next;
 			$fmt =~ s/$EXPN_RE/expn($1, \%match, $_)/ge;
 			$url{$_} = $fmt;
 		}
 
-		print Dumper(\%url);
-
 		my $url = unparse_url(%url);
-		print "=> $url\n";
-
 		my $func = $site->{"parser"};
 		if ($func) {
 			return ($url, $func, $url{fragment});
