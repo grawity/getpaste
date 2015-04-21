@@ -34,12 +34,13 @@ sub _prompt {
 
 my $UA = LWP::UserAgent->new;
 
-sub uri_split {
-	my $str = shift;
-
-	# stolen from URI::Split
-	$str =~ m,(?:([^:/?#]+):)?(?://([^/?#]*))?([^?#]*)(?:\?([^#]*))?(?:#(.*))?,;
-}
+my $URI_RE = qr{
+		(?:    (?<scheme> [^:\/?\#]+) : )?
+		(?: // (?<host> [^/?#]*)        )?
+		       (?<path> [^?#]*)
+		(?: \? (?<query> [^#]*)         )?
+		(?: \# (?<fragment> .*)         )?
+	}x;
 
 sub get {
 	my $url = shift;
@@ -378,7 +379,9 @@ sub dl_sour {
 
 sub parse_url {
 	my ($url) = @_;
-	my ($scheme, $host, $path, $query, $frag) = uri_split $url;
+
+	my @m = ($url =~ $URI_RE);
+	my ($scheme, $host, $path, $query, $frag) = @m;
 
 	_debug("scheme='".($scheme//"")."'".
 		", host='".($host//"")."'".
