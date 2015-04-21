@@ -374,6 +374,10 @@ my @sites = (
 		host => "sprunge.us",
 	},
 	{
+		host => qr/^(dark-)?code\.bulix\.org$/,
+		to_query => "raw",
+	},
+	{
 		host => "codepad.org",
 		path => qr!^(/\w+)!,
 		to_path => "#1/raw.txt",
@@ -387,6 +391,14 @@ my @sites = (
 		host => ["dpaste.org", "dpaste.de"],
 		path => qr!^(/\w+)!,
 		to_path => "#1/raw/",
+	},
+	{
+		host => "www.dropbox.com",
+		to_host => "dl.dropboxusercontent.com",
+	},
+	{
+		host => "paste.fedoraproject.org",
+		to_path => "#0/raw",
 	},
 	{
 		host => "fpaste.org",
@@ -403,9 +415,19 @@ my @sites = (
 		to_path => "#0.txt",
 	},
 	{
+		host => "hastebin.com",
+		path => qr!^/(\w+)!,
+		to_path => "/raw/#1",
+	},
+	{
 		host => qr/^(www\.)?irccloud\.com$/,
 		path => qr!^(/pastebin/\w+)!,
 		to_path => "#1.raw",
+	},
+	{
+		host => "pastebin.ca",
+		path => qr!^(?:/raw)?/(\d+)!,
+		to_path => "/raw/#1",
 	},
 	{
 		host => "pastebin.com",
@@ -413,9 +435,19 @@ my @sites = (
 		to_path => "/download.php?i=#1",
 	},
 	{
+		host => "pastebin.de",
+		path => qr!^(\d+)!,
+		to_path => "/download/?id=#1",
+	},
+	{
 		host => "pastie.org",
 		path => qr!^/(\d+)!,
 		to_path => "/pastes/#1/download",
+	},
+	{
+		host => "privatepaste.com",
+		path => qr!^/(\w+)!,
+		to_path => "/download/#1",
 	},
 	# cryptobins
 	{
@@ -433,6 +465,18 @@ my @sites = (
 		to_path => "/p.store/#{fragment.1}",
 		to_fragment => "#{fragment.2}",
 		parser => \&dl_sour,
+	},
+	{
+		# TODO: actually implement url & to_url
+		url => qr{^zerobin\+(https?://.+)$},
+		to_url => "#{url.1}",
+		parser => \&dl_zerobin,
+	},
+	{
+		query => qr/^[0-9a-f]{16}$/,
+		fragment => qr{^[0-9A-Za-z+/]{43}=$},
+		note => "probably a ZeroBin site based on query & fragment",
+		parser => \&dl_zerobin,
 	},
 );
 
@@ -549,51 +593,6 @@ SITE:	for my $site (@sites) {
 			return ($url);
 		}
 	}
-
-	# old matching
-
-	my ($scheme, $host, $path, $query, $frag) = @url{@fields};
-
-	$path =~ s|^/||;
-	$query //= "";
-
-	if ($host =~ /^sprunge\.us$/)
-		{ return $url }
-
-	elsif ($host =~ /^(?:[\w-]+\.)?pastebin\.ca$/ and $path =~ m!^(?:raw/)?(\d+)!)
-		{ return "$scheme://$host/raw/$1" }
-
-	elsif ($host =~ /(?:dark-)?code\.bulix\.org$/ and $path =~ m!^(\w+-\d+)!)
-		{ return "$scheme://$host/$1?raw" }
-
-	elsif ($host =~ /^paste\.fedoraproject\.org$/)
-		{ return "$scheme://$host/$path/raw" }
-
-	elsif ($host =~ /^pastebin\.de$/ and $path =~ m!^(\d+)!)
-		{ return "$scheme://$host/download/?id=$1" }
-
-	elsif ($host =~ /^privatepaste\.com$/ and $path =~ m!^(\w+)!)
-		{ return "$scheme://$host/download/$1" }
-
-	elsif ($host =~ /^hastebin\.com$/ and $path =~ m!^(\w+)!)
-		{ return "$scheme://hastebin.com/raw/$1" }
-
-	elsif ($host =~ /^www\.dropbox\.com$/)
-		{ "$scheme://dl.dropboxusercontent.com/$path" }
-
-	# cryptobins
-
-	elsif ($url =~ m{^zerobin\+(https?://.+)$})
-		{ $1, \&dl_zerobin, $frag }
-
-	elsif ($query =~ /^[0-9a-f]{16}$/ && $frag =~ m{^[0-9A-Za-z+/]{43}=$})
-		{ _debug("probably a ZeroBin site based on query & fragment");
-		  $url, \&dl_zerobin, $frag }
-
-	# final
-
-	else
-		{ return undef }
 }
 
 sub usage {
