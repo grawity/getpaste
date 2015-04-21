@@ -467,9 +467,8 @@ my @sites = (
 		parser => \&dl_sour,
 	},
 	{
-		# TODO: actually implement url & to_url
-		url => qr{^zerobin\+(https?://.+)$},
-		to_url => "#{url.1}",
+		scheme => qr/^zerobin\+(https?)$/,
+		to_scheme => "#{scheme.1}",
 		parser => \&dl_zerobin,
 	},
 	{
