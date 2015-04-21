@@ -495,6 +495,17 @@ sub dl_sour {
 
 # }}}
 # SITE DATABASE {{{
+#
+# - supported match fields:
+#     scheme, host, path, query, fragment
+#     ('host' includes the :port if any)
+#
+# - each match may be a "string literal", qr/regex literal/, or [array thereof],
+#
+# - each match field has a corresponding 'to_*' replacement field,
+#
+# - replacements may use #𝒏 (#0, #1–#9) to reference capture groups of same field,
+#   as well as #{field.𝒏} for capture groups of another field.
 
 @SITES = (
 	# generic (forced)
