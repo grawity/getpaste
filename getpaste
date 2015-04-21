@@ -11,6 +11,8 @@ use JSON;
 use LWP::UserAgent;
 use MIME::Base64;
 
+# generic utility functions {{{
+
 BEGIN {
 	if (eval {require Nullroute::Lib}) {
 		Nullroute::Lib->import(qw(_debug _warn _err _die));
@@ -31,6 +33,125 @@ sub _prompt {
 	chomp(my $resp = <STDIN>);
 	$resp;
 }
+
+# }}}
+# URL parsing functions {{{
+
+my $URL_RE = qr{
+		(?:    (?<scheme> [^:\/?\#]+) : )?
+		(?: // (?<host> [^/?#]*)        )?
+		       (?<path> [^?#]*)
+		(?: \? (?<query> [^#]*)         )?
+		(?: \# (?<fragment> .*)         )?
+	}x;
+
+sub parse_url {
+	my ($url) = @_;
+
+	if ($url =~ $URL_RE) { return %+; }
+}
+
+sub unparse_url {
+	my (%url) = @_;
+
+	my $url = $url{scheme}."://".$url{host};
+	$url .= $url{path}         if defined($url{path});
+	$url .= "?".$url{query}    if defined($url{query});
+	$url .= "#".$url{fragment} if defined($url{fragment});
+	return $url;
+}
+
+# }}}
+# translation database functions {{{
+
+sub smart_match {
+	my ($str, $pattern) = @_;
+
+	if (ref($pattern) eq "ARRAY") {
+		for (@$pattern) {
+			my @res = smart_match($str, $_);
+			return @res if @res;
+		}
+	}
+	elsif (ref($pattern) eq "Regexp" && $str =~ $pattern) {
+		# If $pattern has no capture groups, =~ will return an
+		# (1,) in list context since it needs a trueish value.
+		# This piece linenoise works consistently in all cases.
+		return map {substr($str, $-[$_], $+[$_]-$-[$_])} 0..$#-;
+	}
+	elsif (ref($pattern) eq "" && $str eq $pattern) {
+		return $str;
+	}
+	return;
+}
+
+my $EXPN_RE = qr/#(#|\d|\{\w+.\d+\})/;
+
+sub expn {
+	my ($str, $data, $def) = @_;
+
+	for ($str) {
+		if ($_ eq "#") {
+			return $_;
+		} elsif ($def && /^(\d+)$/) {
+			return $data->{$def}->[$1] // "";
+		} elsif (/^\{(\w+).(\d+)\}$/) {
+			return $data->{$1}->[$2] // "";
+		} else {
+			_err("unknown expansion '#$_'");
+			return "\x{1F612}";
+		}
+	}
+};
+
+my @SITES;
+
+sub translate_url {
+	my ($url) = @_;
+
+	my @fields = qw(scheme host path query fragment);
+
+	my %url = parse_url($url);
+
+	unless (%url && defined($url{host}) && defined($url{path})) {
+		_die("bad URL: $url");
+	}
+
+	_debug("scheme='".($url{scheme}//"")."'".
+		", host='".($url{host}//"")."'".
+		", path='".($url{path}//"")."'".
+		", query='".($url{query}//"")."'".
+		", frag='".($url{fragment}//"")."'");
+
+SITE:	for my $site (@SITES) {
+		use Data::Dumper;
+
+		my %match;
+		for (@fields) {
+			my $pat = $site->{"$_"} or next;
+			my @res = smart_match($url{$_}, $pat) or next SITE;
+			$match{$_} = \@res;
+		}
+		next if !%match;
+
+		for (@fields) {
+			my $fmt = $site->{"to_$_"} or next;
+			$fmt =~ s/$EXPN_RE/expn($1, \%match, $_)/ge;
+			$url{$_} = $fmt;
+		}
+
+		my $url = unparse_url(%url);
+		my $func = $site->{"parser"};
+		if ($func) {
+			return ($url, $func, $url{fragment});
+		} else {
+			return ($url);
+		}
+	}
+}
+
+# }}}
+# HTTP client functions {{{
 
 my $UA = LWP::UserAgent->new;
 
@@ -72,6 +193,9 @@ sub post {
 		return undef;
 	}
 }
+
+# }}}
+# DECRYPTORS {{{
 
 sub decode_sour_base64 {
 	my ($str) = @_;
@@ -369,7 +493,10 @@ sub dl_sour {
 	return $data;
 }
 
-my @sites = (
+# }}}
+# SITE DATABASE {{{
+
+@SITES = (
 	{
 		host => "sprunge.us",
 	},
@@ -479,113 +606,7 @@ my @sites = (
 	},
 );
 
-sub smart_match {
-	my ($str, $pattern) = @_;
-
-	if (ref($pattern) eq "ARRAY") {
-		for (@$pattern) {
-			my @res = smart_match($str, $_);
-			return @res if @res;
-		}
-	}
-	elsif (ref($pattern) eq "Regexp" && $str =~ $pattern) {
-		# If $pattern has no capture groups, =~ will return an
-		# (1,) in list context since it needs a trueish value.
-		# This piece linenoise works consistently in all cases.
-		return map {substr($str, $-[$_], $+[$_]-$-[$_])} 0..$#-;
-	}
-	elsif (ref($pattern) eq "" && $str eq $pattern) {
-		return $str;
-	}
-	return;
-}
-
-my $EXPN_RE = qr/#(#|\d|\{\w+.\d+\})/;
-
-sub expn {
-	my ($str, $data, $def) = @_;
-
-	for ($str) {
-		if ($_ eq "#") {
-			return $_;
-		} elsif ($def && /^(\d+)$/) {
-			return $data->{$def}->[$1] // "";
-		} elsif (/^\{(\w+).(\d+)\}$/) {
-			return $data->{$1}->[$2] // "";
-		} else {
-			_err("unknown expansion '#$_'");
-			return "\x{1F612}";
-		}
-	}
-};
-
-my $URL_RE = qr{
-		(?:    (?<scheme> [^:\/?\#]+) : )?
-		(?: // (?<host> [^/?#]*)        )?
-		       (?<path> [^?#]*)
-		(?: \? (?<query> [^#]*)         )?
-		(?: \# (?<fragment> .*)         )?
-	}x;
-
-sub parse_url {
-	my ($url) = @_;
-
-	if ($url =~ $URL_RE) { return %+; }
-}
-
-sub unparse_url {
-	my (%url) = @_;
-
-	my $url = $url{scheme}."://".$url{host};
-	$url .= $url{path}         if defined($url{path});
-	$url .= "?".$url{query}    if defined($url{query});
-	$url .= "#".$url{fragment} if defined($url{fragment});
-	return $url;
-}
-
-sub translate_paste_url {
-	my ($url) = @_;
-
-	my @fields = qw(scheme host path query fragment);
-
-	my %url = parse_url($url);
-
-	unless (%url && defined($url{host}) && defined($url{path})) {
-		_die("bad URL: $url");
-	}
-
-	_debug("scheme='".($url{scheme}//"")."'".
-		", host='".($url{host}//"")."'".
-		", path='".($url{path}//"")."'".
-		", query='".($url{query}//"")."'".
-		", frag='".($url{fragment}//"")."'");
-
-SITE:	for my $site (@sites) {
-		use Data::Dumper;
-
-		my %match;
-		for (@fields) {
-			my $pat = $site->{"$_"} or next;
-			my @res = smart_match($url{$_}, $pat) or next SITE;
-			$match{$_} = \@res;
-		}
-		next if !%match;
-
-		for (@fields) {
-			my $fmt = $site->{"to_$_"} or next;
-			$fmt =~ s/$EXPN_RE/expn($1, \%match, $_)/ge;
-			$url{$_} = $fmt;
-		}
-
-		my $url = unparse_url(%url);
-		my $func = $site->{"parser"};
-		if ($func) {
-			return ($url, $func, $url{fragment});
-		} else {
-			return ($url);
-		}
-	}
-}
+# }}}
 
 sub usage {
 	print "$_\n" for
@@ -620,7 +641,7 @@ unless ($ENV{PERL_LWP_SSL_CA_FILE} || $ENV{HTTPS_CA_FILE}) {
 # Main code
 
 for my $url (@ARGV) {
-	my ($raw, $handler, @hargs) = translate_paste_url($url);
+	my ($raw, $handler, @hargs) = translate_url($url);
 	if (!defined $raw && !defined $handler) {
 		_err("unknown pastebin: $url");
 	} elsif ($showurl) {
@@ -644,3 +665,4 @@ for my $url (@ARGV) {
 }
 
 exit $::errors;
+# vim: ts=8:sw=8:noet:fdm=marker
