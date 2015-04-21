@@ -473,15 +473,33 @@ sub expn {
 	}
 };
 
+sub parse_uri {
+	my ($uri) = @_;
+
+	if ($uri =~ $URI_RE) { return %+; }
+}
+
+sub unparse_uri {
+	my (%uri) = @_;
+
+	my $uri = $uri{scheme}."://".$uri{host};
+	$uri .= $uri{path}         if defined($uri{path});
+	$uri .= "?".$uri{query}    if defined($uri{query});
+	$uri .= "#".$uri{fragment} if defined($uri{fragment});
+	return $uri;
+}
+
 sub translate_paste_url {
 	my ($url) = @_;
 
-	unless ($url =~ $URI_RE && defined($+{host}) && defined($+{path})) {
+	my %uri = parse_uri($url);
+
+	unless (%uri && defined($uri{host}) && defined($uri{path})) {
 		_die("bad URL: $url");
 	}
 
 	my @fields = qw(scheme host path query frag);
-	my %values = %+;
+	my %values = %uri;
 
 	_debug("scheme='".($+{scheme}//"")."'".
 		", host='".($+{host}//"")."'".
@@ -494,8 +512,6 @@ sub translate_paste_url {
 SITE:	for my $site (@sites) {
 		use Data::Dumper;
 
-		# match against old URI components
-
 		my %match;
 		for (@fields) {
 			my $pat = $site->{"$_"} or next;
@@ -507,8 +523,6 @@ SITE:	for my $site (@sites) {
 		print Dumper($site);
 		print Dumper(\%match);
 
-		# apply translations to each component
-
 		for (@fields) {
 			my $fmt = $site->{"to_$_"} or next;
 			$fmt =~ s/#(#|\d|\{\w+.\d+\})/expn($1, \%match, "path")/ge;
@@ -517,7 +531,12 @@ SITE:	for my $site (@sites) {
 
 		print Dumper(\%values);
 
-		exit;
+		my $uri = unparse_uri(%values);
+		print "=> $uri\n";
+
+		# TODO: to_func
+
+		return $uri;
 	}
 
 	$path =~ s|^/||;
