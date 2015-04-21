@@ -140,12 +140,12 @@ SITE:	for my $site (@SITES) {
 			$url{$_} = $fmt;
 		}
 
-		my $url = unparse_url(%url);
+		my $raw_url = unparse_url(%url);
 		my $func = $site->{"parser"};
 		if ($func) {
-			return ($url, $func, $url{fragment});
+			return ($raw_url, $func, $url{fragment});
 		} else {
-			return ($url);
+			return ($raw_url);
 		}
 	}
 }
