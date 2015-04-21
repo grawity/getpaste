@@ -468,7 +468,7 @@ my @sites = (
 	},
 	{
 		scheme => qr/^zerobin\+(https?)$/,
-		to_scheme => "#{scheme.1}",
+		to_scheme => "#1",
 		parser => \&dl_zerobin,
 	},
 	{
@@ -576,7 +576,7 @@ SITE:	for my $site (@sites) {
 
 		for (@fields) {
 			my $fmt = $site->{"to_$_"} or next;
-			$fmt =~ s/$EXPN_RE/expn($1, \%match, "path")/ge;
+			$fmt =~ s/$EXPN_RE/expn($1, \%match, $_)/ge;
 			$url{$_} = $fmt;
 		}
 
