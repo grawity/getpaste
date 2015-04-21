@@ -391,6 +391,7 @@ sub parse_url {
 	}
 
 	$path =~ s|^/||;
+	$query //= "";
 
 	if ($host =~ /^sprunge\.us$/)
 		{ return $url }
