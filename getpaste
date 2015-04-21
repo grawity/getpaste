@@ -397,59 +397,59 @@ sub parse_url {
 		{ return $url }
 
 	elsif ($host =~ /^codepad\.org$/ and $path =~ m!^(\w+)!)
-		{ return "http://$host/$1/raw.txt" }
+		{ return "$scheme://$host/$1/raw.txt" }
 
 	elsif ($host =~ /^dpaste\.(org|de)$/ and $path =~ m!^(\w+)!)
-		{ return "http://$host/$1/raw/" }
+		{ return "$scheme://$host/$1/raw/" }
 
 	elsif ($host =~ /^ghostbin\.com$/ and $path =~ m!^(paste/\w+)!)
 		{ return "$scheme://$host/$1/raw" }
 
 	elsif ($host =~ /^dpaste\.com$/ and $path =~ m!^(?:hold/)?(\d+)!)
-		{ return "http://$host/$1/plain/" }
+		{ return "$scheme://$host/$1/plain/" }
 
 	elsif ($host =~ /^(?:[\w-]+\.)?pastebin\.ca$/ and $path =~ m!^(?:raw/)?(\d+)!)
-		{ return "http://$host/raw/$1" }
+		{ return "$scheme://$host/raw/$1" }
 
 	elsif ($host =~ /^pastebin\.com$/ and $path =~ m!^(?:index/)?(\w+)!)
-		{ return "http://$host/download.php?i=$1" }
+		{ return "$scheme://$host/download.php?i=$1" }
 
 	elsif ($host =~ /^pastebin(\.centos|\.mozilla)?\.org$/
 		and $path =~ m!^(?:pastebin\.php\?dl=)?(\d+)!)
-		{ return "http://$host/pastebin.php?dl=$1" }
+		{ return "$scheme://$host/pastebin.php?dl=$1" }
 
 	elsif ($host =~ /^paste\.linuxassist\.net$/ and $path =~ m!(\d+)!)
-		{ return "http://linux:linux\@$host/pastebin.php?raw=$1" }
+		{ return "$scheme://linux:linux\@$host/pastebin.php?raw=$1" }
 
 	elsif ($host =~ /^pastie\.org$/ and $path =~ m!^(\d+)!)
-		{ return "http://$host/pastes/$1/download" }
+		{ return "$scheme://$host/pastes/$1/download" }
 
 	elsif ($host =~ /(?:dark-)?code\.bulix\.org$/ and $path =~ m!^(\w+-\d+)!)
-		{ return "http://$host/$1?raw" }
+		{ return "$scheme://$host/$1?raw" }
 
 	elsif ($host =~ /^fpaste\.org$/ and $path =~ m!^(\w+(?:/\d+)?)!)
-		{ return "http://$host/$1/raw/" }
+		{ return "$scheme://$host/$1/raw/" }
 
 	elsif ($host =~ /^paste\.fedoraproject\.org$/)
-		{ return "http://$host/$path/raw" }
+		{ return "$scheme://$host/$path/raw" }
 
 	elsif ($host =~ /^pastebin\.de$/ and $path =~ m!^(\d+)!)
-		{ return "http://$host/download/?id=$1" }
+		{ return "$scheme://$host/download/?id=$1" }
 
 	elsif ($host =~ /^privatepaste\.com$/ and $path =~ m!^(\w+)!)
-		{ return "http://$host/download/$1" }
+		{ return "$scheme://$host/download/$1" }
 
 	elsif ($host =~ /^gist\.github\.com$/)
-		{ return "https://$host/$path.txt" }
+		{ return "$scheme://$host/$path.txt" }
 
 	elsif ($host =~ /^hastebin\.com$/ and $path =~ m!^(\w+)!)
-		{ "http://hastebin.com/raw/$1" }
+		{ "$scheme://hastebin.com/raw/$1" }
 
 	elsif ($host =~ /^www\.dropbox\.com$/)
-		{ "https://dl.dropboxusercontent.com/$path" }
+		{ "$scheme://dl.dropboxusercontent.com/$path" }
 
 	elsif ($host =~ /^(www\.)?irccloud\.com$/ and $path =~ m!^pastebin/(\w+)!)
-		{ "https://$host/pastebin/$1.raw" }
+		{ "$scheme://$host/pastebin/$1.raw" }
 
 	# cryptobins
 
@@ -460,7 +460,7 @@ sub parse_url {
 		{ $url, \&dl_ezcrypt, $frag }
 
 	elsif ($host =~ /^sour\.is$/ and $path eq "p/" and $frag =~ m{^/(.+)!(.+)})
-		{ "https://sour.is/p.store/$1", \&dl_sour, $2 }
+		{ "$scheme://sour.is/p.store/$1", \&dl_sour, $2 }
 
 	elsif ($url =~ m{^zerobin\+(https?://.+)$})
 		{ $1, \&dl_zerobin, $frag }
