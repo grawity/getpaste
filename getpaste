@@ -535,6 +535,11 @@ sub dl_sour {
 		to_path => "#1/raw.txt",
 	},
 	{
+		host => "paste.debian.net",
+		path => qr!^/(\d+)!,
+		to_path => "/plain/#1",
+	},
+	{
 		host => "dpaste.com",
 		path => qr!^(?:/hold)?(/\d+)!,
 		to_path => "#1/plain/",
@@ -579,6 +584,11 @@ sub dl_sour {
 		host => qr/^(www\.)?irccloud\.com$/,
 		path => qr!^(/pastebin/\w+)!,
 		to_path => "#1.raw",
+	},
+	{
+		host => "paste.opensuse.org",
+		path => qr!^/(\d+)!,
+		to_path => "/view/raw/#1",
 	},
 	{
 		host => "pastebin.ca",
