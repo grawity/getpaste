@@ -75,7 +75,10 @@ sub unparse_url {
 sub smart_match {
 	my ($str, $pattern) = @_;
 
-	if (ref($pattern) eq "ARRAY") {
+	if (!defined $str) {
+		return;
+	}
+	elsif (ref($pattern) eq "ARRAY") {
 		for (@$pattern) {
 			my @res = smart_match($str, $_);
 			return @res if @res;
