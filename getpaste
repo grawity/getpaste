@@ -596,6 +596,12 @@ sub dl_sour {
 		to_path => "#1.raw",
 	},
 	{
+		host => "pastebin.mozilla.org",
+		path => qr!^/(\d+)!,
+		to_path => "",
+		to_query => "dl=#{path.1}",
+	},
+	{
 		host => "paste.opensuse.org",
 		path => qr!^/(\d+)!,
 		to_path => "/view/raw/#1",
