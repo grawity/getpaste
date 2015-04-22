@@ -713,6 +713,10 @@ sub dl_sour {
 	{
 		host => "termbin.com",
 	},
+	{
+		host => "ur1.ca",
+		parser => \&dl_recursive,
+	},
 	# generic (wild guess)
 	{
 		query => qr/^[0-9a-f]{16}$/,
