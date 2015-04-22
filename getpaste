@@ -197,6 +197,14 @@ sub retrieve_paste {
 	}
 }
 
+sub dl_recursive {
+	my ($url) = @_;
+
+	my $target = follow($url);
+
+	return retrieve_paste($target);
+}
+
 # }}}
 # HTTP client functions {{{
 
@@ -213,7 +221,7 @@ sub get {
 		return $resp->decoded_content // $resp->content;
 	} else {
 		_err("fetch failed: '".$resp->status_line."'");
-		return undef;
+		return;
 	}
 }
 
@@ -237,7 +245,23 @@ sub post {
 		return $resp->decoded_content // $resp->content;
 	} else {
 		_err("post failed: '".$resp->status_line."'");
-		return undef;
+		return;
+	}
+}
+
+sub follow {
+	my ($url) = @_;
+
+	_debug("following '$url'");
+	my $resp = $UA->head($url);
+
+	if ($resp->is_success) {
+		_debug("fetch complete: '".$resp->status_line."'");
+		_debug(" -> '$_'") for map {$_->request->uri} ($resp->redirects, $resp);
+		return $resp->request->uri->as_string;
+	} else {
+		_err("fetch failed: '".$resp->status_line."'");
+		return;
 	}
 }
 
@@ -630,6 +654,11 @@ sub dl_sour {
 		host => "paste.lisp.org",
 		path => qr!^/display/\d+!,
 		to_path => "#0/raw",
+	},
+	{
+		host => "paste.lisp.org",
+		path => qr!^/\+!,
+		parser => \&dl_recursive,
 	},
 	{
 		host => "pastebin.mozilla.org",
