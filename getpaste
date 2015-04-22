@@ -35,6 +35,11 @@ sub _prompt {
 	$resp;
 }
 
+sub _dump {
+	use Data::Dumper;
+	return Data::Dumper->new(\@_)->Terse(1)->Indent(0)->Dump;
+}
+
 # }}}
 # URL parsing functions {{{
 
@@ -131,6 +136,8 @@ SITE:	for my $site (@SITES) {
 		for (@fields) {
 			my $pat = $site->{"$_"} or next;
 			my @res = smart_match($url{$_}, $pat) or next SITE;
+			_debug("match $_ ~ "._dump($pat));
+			_debug(" -> "._dump(\@res));
 			$match{$_} = \@res;
 		}
 		next if !%match;
@@ -605,7 +612,7 @@ sub dl_sour {
 	},
 	{
 		host => "pastebin.de",
-		path => qr!^(\d+)!,
+		path => qr!^/(\d+)!,
 		to_path => "/download/?id=#1",
 	},
 	{
