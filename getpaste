@@ -583,7 +583,7 @@ sub dl_sour {
 		to_path => "/raw/#1",
 	},
 	{
-		host => qr/^(www\.)?irccloud\.com$/,
+		host => ["irccloud.com", "www.irccloud.com"],
 		path => qr!^(/pastebin/\w+)!,
 		to_path => "#1.raw",
 	},
@@ -593,7 +593,7 @@ sub dl_sour {
 		to_path => "/view/raw/#1",
 	},
 	{
-		host => "pastebin.ca",
+		host => ["pastebin.ca", "www.pastebin.ca"],
 		path => qr!^(?:/raw)?/(\d+)!,
 		to_path => "/raw/#1",
 	},
@@ -668,6 +668,8 @@ if ($insecure) {
 unless ($ENV{PERL_LWP_SSL_CA_FILE} || $ENV{HTTPS_CA_FILE}) {
 	$UA->ssl_opts(SSL_ca_file => "/etc/ssl/certs/ca-certificates.crt");
 }
+
+$UA->agent("Mozilla/4.0 getpaste/0.42 (http://nullroute.eu.org/) ".$UA->_agent);
 
 # Main code
 
