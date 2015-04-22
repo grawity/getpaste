@@ -581,7 +581,7 @@ sub dl_sour {
 @SITES = (
 	# generic (forced)
 	{
-		scheme => qr/^zerobin\+(https?)$/,
+		scheme => qr/^zerobin\+(.+)$/,
 		to_scheme => "#1",
 		parser => \&dl_zerobin,
 	},
@@ -628,13 +628,13 @@ sub dl_sour {
 	},
 	{
 		host => "fpaste.org",
-		path => qr!^(/\w+(?:/\d+)?)!,
-		to_path => "#1/raw/",
+		path => qr!^/\w+(?:/\d+)?!,
+		to_path => "#0/raw/",
 	},
 	{
 		host => "ghostbin.com",
-		path => qr!^(/paste/\w+)!,
-		to_path => "#1/raw",
+		path => qr!^/paste/\w+!,
+		to_path => "#0/raw",
 	},
 	{
 		host => "gist.github.com",
@@ -647,8 +647,8 @@ sub dl_sour {
 	},
 	{
 		host => ["irccloud.com", "www.irccloud.com"],
-		path => qr!^(/pastebin/\w+)!,
-		to_path => "#1.raw",
+		path => qr!^/pastebin/\w+!,
+		to_path => "#0.raw",
 	},
 	{
 		host => "paste.lisp.org",
