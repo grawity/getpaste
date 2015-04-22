@@ -11,7 +11,9 @@ use JSON;
 use LWP::UserAgent;
 use MIME::Base64;
 
-# CORE FUNCTIONS {{{
+my $opt_insecure = 0;
+my $opt_show_url = 0;
+
 # generic utility functions {{{
 
 BEGIN {
@@ -165,6 +167,33 @@ SITE:	for my $site (@SITES) {
 	return;
 }
 
+sub retrieve_paste {
+	my ($url) = @_;
+
+	my ($raw_url, $handler, @hargs) = translate_url($url);
+
+	if (!$raw_url && !$handler) {
+		_err("unknown pastebin: $url");
+	} elsif ($opt_show_url) {
+		if ($handler) {
+			_err("pastebin does not have raw URLs: $url");
+		} else {
+			print "$raw_url\n";
+		}
+	} else {
+		if ($handler) {
+			my $output = $handler->($raw_url, @hargs);
+			if (defined $output) {
+				print "$output\n";
+			} else {
+				_err("paste extraction failed");
+			}
+		} else {
+			getprint($raw_url);
+		}
+	}
+}
+
 # }}}
 # HTTP client functions {{{
 
@@ -209,7 +238,6 @@ sub post {
 	}
 }
 
-# }}}
 # }}}
 # DECRYPTORS {{{
 
@@ -671,22 +699,17 @@ sub usage {
 	"  -u, --show-url         Output only the URL of raw document",
 }
 
-# Option parsing
-
-my $insecure = 0;
-my $showurl = 0;
-
 GetOptions(
 	"help"		=> sub { usage(); exit; },
-	"insecure"	=> \$insecure,
-	"u|show-url"	=> \$showurl,
+	"opt_insecure"	=> \$opt_insecure,
+	"u|show-url"	=> \$opt_show_url,
 ) or exit 2;
 
 if (!@ARGV) {
 	_die("missing URL", 2);
 }
 
-if ($insecure) {
+if ($opt_insecure) {
 	$UA->ssl_opts(verify_hostname => 0);
 }
 
@@ -696,30 +719,8 @@ unless ($ENV{PERL_LWP_SSL_CA_FILE} || $ENV{HTTPS_CA_FILE}) {
 
 $UA->agent("Mozilla/4.0 getpaste/0.42 (http://nullroute.eu.org/) ".$UA->_agent);
 
-# Main code
-
-for my $url (@ARGV) {
-	my ($raw, $handler, @hargs) = translate_url($url);
-	if (!defined $raw && !defined $handler) {
-		_err("unknown pastebin: $url");
-	} elsif ($showurl) {
-		if ($handler) {
-			_err("pastebin does not have raw URLs: $url");
-		} else {
-			print "$raw\n";
-		}
-	} else {
-		if ($handler) {
-			my $output = $handler->($raw, @hargs);
-			if (defined $output) {
-				print "$output\n";
-			} else {
-				_err("paste extraction failed");
-			}
-		} else {
-			getprint $raw;
-		}
-	}
+for (@ARGV) {
+	retrieve_paste($_);
 }
 
 exit $::errors;
