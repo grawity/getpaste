@@ -142,7 +142,7 @@ SITE:	for my $site (@SITES) {
 		}
 		next if !%match;
 
-		if ($site->{"note"}) { _debug("match found: ".$site->{"note"}); }
+		if ($site->{"note"}) { _debug($site->{"note"}); }
 
 		for (@fields) {
 			$match{$_} //= [$url{$_}];
@@ -541,8 +541,8 @@ sub dl_sour {
 	},
 	{
 		host => "codepad.org",
-		path => qr!^(/\w+)!,
-		to_path => "#1/raw.txt",
+		path => qr!^/\w+!,
+		to_path => "#0/raw.txt",
 	},
 	{
 		host => "paste.debian.net",
@@ -551,13 +551,13 @@ sub dl_sour {
 	},
 	{
 		host => "dpaste.com",
-		path => qr!^(?:/hold)?(/\d+)!,
-		to_path => "#1/plain/",
+		path => qr!^/\w+!,
+		to_path => "#0.txt",
 	},
 	{
 		host => ["dpaste.org", "dpaste.de"],
-		path => qr!^(/\w+)!,
-		to_path => "#1/raw/",
+		path => qr!^/\w+!,
+		to_path => "#0/raw/",
 	},
 	{
 		host => "www.dropbox.com",
@@ -568,7 +568,7 @@ sub dl_sour {
 		parser => \&dl_ezcrypt,
 	},
 	{
-		host => "paste.fedoraproject.org",
+		host => ["fpaste.org", "paste.fedoraproject.org"],
 		to_path => "#0/raw",
 	},
 	{
@@ -594,6 +594,11 @@ sub dl_sour {
 		host => ["irccloud.com", "www.irccloud.com"],
 		path => qr!^(/pastebin/\w+)!,
 		to_path => "#1.raw",
+	},
+	{
+		host => "paste.lisp.org",
+		path => qr!^/display/\d+!,
+		to_path => "#0/raw",
 	},
 	{
 		host => "pastebin.mozilla.org",
@@ -640,7 +645,13 @@ sub dl_sour {
 		parser => \&dl_sour,
 	},
 	{
-		host => "sprunge.us",
+		host => ["ix.io", "sprunge.us"],
+		path => qr!^/\w+!,
+		to_path => "#0",
+		to_query => "",
+	},
+	{
+		host => "termbin.com",
 	},
 	# generic (wild guess)
 	{
