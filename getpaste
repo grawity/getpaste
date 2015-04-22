@@ -697,6 +697,11 @@ sub dl_sour {
 		to_path => "/download/#1",
 	},
 	{
+		host => "www.refheap.com",
+		path => qr!^/\d+!,
+		to_path => "#0/raw",
+	},
+	{
 		host => "sour.is",
 		path => "/p/",
 		fragment => qr{^/(.+)!(.+)},
@@ -712,10 +717,6 @@ sub dl_sour {
 	},
 	{
 		host => "termbin.com",
-	},
-	{
-		host => "ur1.ca",
-		parser => \&dl_recursive,
 	},
 	# generic (wild guess)
 	{
