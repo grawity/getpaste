@@ -149,7 +149,7 @@ SITE:	for my $site (@SITES) {
 		}
 
 		for (@fields) {
-			my $fmt = $site->{"to_$_"} or next;
+			my $fmt = $site->{"to_$_"} // next;
 			$fmt =~ s/$EXPN_RE/expn($1, \%match, $_)/ge;
 			$url{$_} = $fmt;
 		}
