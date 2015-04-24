@@ -702,7 +702,7 @@ sub dl_sour {
 		to_path => "#0/raw",
 	},
 	{
-		host => "sour.is",
+		host => ["sour.is", "dn42.us"],
 		path => "/p/",
 		fragment => qr{^/(.+)!(.+)},
 		to_path => "/p.store/#{fragment.1}",
