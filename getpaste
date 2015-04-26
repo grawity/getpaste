@@ -31,10 +31,11 @@ BEGIN {
 }
 
 sub _prompt {
-	my $msg = shift;
+	my ($msg) = @_;
+
 	print STDERR "\e[1m$msg\e[m "; $|++;
 	chomp(my $resp = <STDIN>);
-	$resp;
+	return $resp;
 }
 
 sub _dump {
@@ -211,7 +212,7 @@ sub dl_recursive {
 my $UA = LWP::UserAgent->new;
 
 sub get {
-	my $url = shift;
+	my ($url) = @_;
 
 	_debug("fetching '$url'");
 	my $resp = $UA->get($url);
@@ -276,7 +277,7 @@ sub decode_sour_base64 {
 }
 
 sub decode_html {
-	my $str = shift;
+	my ($str) = @_;
 
 	$str =~ s/&lt;/</g;
 	$str =~ s/&gt;/>/g;
@@ -286,7 +287,7 @@ sub decode_html {
 }
 
 sub try_decode_json {
-	my $data = shift;
+	my ($data) = @_;
 
 	return ref $data ? $data : decode_json($data);
 }
