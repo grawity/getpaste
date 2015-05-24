@@ -565,6 +565,14 @@ sub dl_sour {
 	return $data;
 }
 
+sub dl_kopy {
+	my ($url) = @_;
+
+	my $body = get($url) // return;
+	my $data = decode_json($body);
+	return $data->{data};
+}
+
 # }}}
 # SITE DATABASE {{{
 #
@@ -650,6 +658,12 @@ sub dl_sour {
 		host => ["irccloud.com", "www.irccloud.com"],
 		path => qr!^/pastebin/\w+!,
 		to_path => "#0.raw",
+	},
+	{
+		host => "kopy.io",
+		path => qr!^/(\w+)!,
+		to_path => "/documents/#1",
+		parser => \&dl_kopy,
 	},
 	{
 		host => "paste.lisp.org",
