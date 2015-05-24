@@ -383,7 +383,7 @@ sub decrypt_ezcrypt {
 	return Crypt::Mode::OFB->new("AES")->decrypt($data, $key, $iv);
 }
 
-sub decrypt_sour {
+sub decrypt_openssl {
 	eval {
 		require Crypt::Cipher::AES;
 		require Crypt::Mode::CBC;
@@ -558,7 +558,7 @@ sub dl_sour {
 	}
 
 	my $data = decode_base64($body[1]);
-	$data = decrypt_sour($frag, $data);
+	$data = decrypt_openssl($frag, $data);
 	if (($headers{zip} // "") eq "True") {
 		$data = decompress_gzip($data);
 	}
@@ -566,11 +566,17 @@ sub dl_sour {
 }
 
 sub dl_kopy {
-	my ($url) = @_;
+	my ($url, $frag) = @_;
 
 	my $body = get($url) // return;
-	my $data = decode_json($body);
-	return $data->{data};
+	$body = decode_json($body);
+
+	my $data = $body->{data};
+	if (($body->{security} // "") eq "encrypted") {
+		$data = decode_base64($data);
+		$data = decrypt_openssl($frag, $data);
+	}
+	return $data;
 }
 
 # }}}
