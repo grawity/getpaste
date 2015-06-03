@@ -759,7 +759,7 @@ sub usage {
 
 GetOptions(
 	"help"		=> sub { usage(); exit; },
-	"opt_insecure"	=> \$opt_insecure,
+	"k|insecure"	=> \$opt_insecure,
 	"u|show-url"	=> \$opt_show_url,
 ) or exit 2;
 
