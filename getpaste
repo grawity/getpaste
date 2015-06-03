@@ -88,7 +88,7 @@ sub smart_match {
 	elsif (ref($pattern) eq "Regexp" && $str =~ $pattern) {
 		# If $pattern has no capture groups, =~ will return an
 		# (1,) in list context since it needs a trueish value.
-		# This piece linenoise works consistently in all cases.
+		# This bit of linenoise works consistently in all cases.
 		return map {substr($str, $-[$_], $+[$_]-$-[$_])} 0..$#-;
 	}
 	elsif (ref($pattern) eq "" && $str eq $pattern) {
