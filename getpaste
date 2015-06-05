@@ -3,6 +3,7 @@
 #
 # (c) 2010-2015 Mantas Mikulėnas <grawity@gmail.com>
 # Released under the MIT license (see dist/LICENSE.mit)
+use v5.10;
 use warnings;
 use strict;
 no locale;
@@ -57,7 +58,7 @@ my $URL_RE = qr{
 sub parse_url {
 	my ($url) = @_;
 
-	if ($url =~ $URL_RE) { return %+; }
+	if ($url =~ $URL_RE) { return my %url = %+; }
 }
 
 sub unparse_url {
