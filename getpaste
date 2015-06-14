@@ -581,6 +581,22 @@ sub dl_kopy {
 	return $data;
 }
 
+sub dl_dgl_pastesh {
+	my ($url, $frag) = @_;
+
+	my %url = parse_url($url);
+	$url{path} =~ m!^/([^.]+)!;
+	my $id = $1;
+
+	my $body = get($url) // return;
+	$body =~ s/^(.+)\n//;
+	my $key = $id . $1 . $frag . "https://paste.sh";
+
+	$body = decode_base64($body);
+	$body = decrypt_openssl($key, $body, (kdf_algo => "SHA512"));
+	return $body;
+}
+
 # }}}
 # SITE DATABASE {{{
 #
@@ -693,6 +709,11 @@ sub dl_kopy {
 		host => "paste.opensuse.org",
 		path => qr!^/(\d+)!,
 		to_path => "/view/raw/#1",
+	},
+	{
+		host => "paste.sh",
+		to_path => "#0.txt",
+		parser => \&dl_dgl_pastesh,
 	},
 	{
 		host => ["pastebin.ca", "www.pastebin.ca"],
