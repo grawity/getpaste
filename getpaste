@@ -295,18 +295,19 @@ sub try_decode_json {
 
 sub EVP_BytesToKey {
 	eval {
-		require Crypt::Digest::MD5;
+		require Crypt::Digest;
 	} or _die("missing Perl package 'CryptX'");
 
-	Crypt::Digest::MD5->import("md5");
+	Crypt::Digest->import("digest_data");
 
-	my ($salt, $passphrase, $ks, $ivs) = @_;
+	my ($salt, $passphrase, $ks, $ivs, %opt) = @_;
 
+	my $algo = uc($opt{kdf_algo} // "MD5");
 	my $hash = "";
 	my $buf = "";
 
 	while (length($buf) < $ks + $ivs) {
-		$hash = md5($hash, $passphrase, $salt);
+		$hash = digest_data($algo, $hash, $passphrase, $salt);
 		$buf .= $hash;
 	}
 
@@ -391,10 +392,10 @@ sub decrypt_openssl {
 	} or _die("missing Perl package 'CryptX'");
 
 	# serialization: raw [magic + salt + data]
-	# key derivation: EVP_BytesToKey (MD5)
+	# key derivation: EVP_BytesToKey (usually MD5)
 	# encryption: AES-256-CBC
 
-	my ($frag, $data) = @_;
+	my ($frag, $data, %opt) = @_;
 
 	my $ks    = Crypt::Cipher::AES->keysize;
 	my $bs    = Crypt::Cipher::AES->blocksize;
@@ -405,7 +406,7 @@ sub decrypt_openssl {
 	if ($magic ne "Salted__") {
 		_die("bad magic value in encrypted data");
 	}
-	my ($key, $iv) = EVP_BytesToKey($salt, $frag, $ks, $bs);
+	my ($key, $iv) = EVP_BytesToKey($salt, $frag, $ks, $bs, %opt);
 
 	return Crypt::Mode::CBC->new("AES")->decrypt($data, $key, $iv);
 }
