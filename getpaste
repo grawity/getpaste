@@ -711,6 +711,11 @@ sub dl_dgl_pastesh {
 		to_path => "/view/raw/#1",
 	},
 	{
+		host => "paste.ee",
+		path => qr!^/[pr]/(\w+)!,
+		to_path => "/r/#1",
+	},
+	{
 		host => "paste.sh",
 		to_path => "#0.txt",
 		parser => \&dl_dgl_pastesh,
