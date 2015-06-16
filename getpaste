@@ -2,7 +2,7 @@
 # getpaste - retrieves raw text from pastebins
 #
 # (c) 2010-2015 Mantas Mikulėnas <grawity@gmail.com>
-# Released under the MIT license (see dist/LICENSE.mit)
+# Released under the MIT Expat License (dist/LICENSE.expat)
 use v5.10;
 use warnings;
 use strict;
