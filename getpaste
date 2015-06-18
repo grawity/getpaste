@@ -270,6 +270,18 @@ sub follow {
 # }}}
 # DECRYPTORS {{{
 
+sub chunk {
+	my ($buf, $bs) = @_;
+
+	return unpack("(A$bs)*", $buf);
+}
+
+sub decode_hex {
+	my ($str) = @_;
+
+	return pack("H*", $str);
+}
+
 sub decode_sour_base64 {
 	my ($str) = @_;
 
@@ -284,6 +296,13 @@ sub decode_html {
 	$str =~ s/&gt;/>/g;
 	$str =~ s/&quot;/"/g;
 	$str =~ s/&amp;/\&/g;
+	return $str;
+}
+
+sub decode_cescape {
+	my ($str) = @_;
+
+	$str =~ s/\\x([0-9A-Fa-f]{2})/chr hex $1/ge;
 	return $str;
 }
 
@@ -315,6 +334,59 @@ sub EVP_BytesToKey {
 	my $iv = substr($buf, $ks, $ivs);
 
 	return ($key, $iv);
+}
+
+sub ocb_times2 {
+	my ($block) = @_;
+
+	my @block = unpack("C*", $block);
+	my $carry = ($block[0] >> 7) & 0x1;
+	for (my $i = 0; $i < $#block; $i++) {
+		$block[$i] = ($block[$i] << 1) | (($block[$i+1] >> 7) & 0x1);
+	}
+	$block[$#block] = ($block[$#block] << 1) ^ ($carry * 135);
+	return pack("C*", map {$_ & 0xFF} @block);
+}
+
+sub ocb2_decrypt_verify {
+	eval {
+		require Crypt::Cipher;
+		require Crypt::Mac::PMAC;
+	} or _die("missing Perl package 'CryptX'");
+
+	Crypt::Mac::PMAC->import("pmac");
+
+	my ($cipher, $key, $nonce, $aad, $ciphertext, $tag) = @_;
+
+	my $c = Crypt::Cipher->new($cipher, $key);
+	my $bs = $c->blocksize;
+	my $ts = 64 / 8;
+
+	my @ciphertext = chunk($ciphertext, $bs);
+	my $final      = pop(@ciphertext);
+	my $nfinal     = length($final);
+	my $pad        = pack("N*", 0, 0, 0, $nfinal * 8);
+	my $delta      = ocb_times2($c->encrypt($nonce));
+	my $checksum   = "\x00" x $bs;
+	my $output     = "";
+
+	for my $block (@ciphertext) {
+		$block = $c->decrypt($block ^ $delta) ^ $delta;
+		$delta = ocb_times2($delta);
+		$output .= $block;
+		$checksum ^= $block;
+	}
+
+	$final = $final ^ $c->encrypt($delta ^ $pad);
+	$output .= substr($final, 0, $nfinal);
+	$checksum ^= $final;
+
+	$checksum = $c->encrypt($checksum ^ $delta ^ ocb_times2($delta));
+	$checksum ^= pmac($cipher, $key, $aad) if length($aad);
+	$checksum = substr($checksum, 0, $ts);
+
+	return if $checksum ne $tag;
+	return $output;
 }
 
 sub decrypt_sjcl {
@@ -356,6 +428,38 @@ sub decrypt_sjcl {
 	my $tag  = substr($ct, -$ts, $ts, "");
 
 	return ccm_decrypt_verify("AES", $key, $iv, $hdr, $ct, $tag)
+	       // _die("decryption failed");
+}
+
+sub decrypt_defuse {
+	eval {
+		require Crypt::AuthEnc::OCB;
+		require Crypt::KeyDerivation;
+	} or _die("missing Perl package 'CryptX'");
+
+	Crypt::AuthEnc::OCB->import(":all");
+	Crypt::KeyDerivation->import("pbkdf2");
+
+	# serialization: JSON
+	# key derivation: PBKDF2-SHA256
+	# encryption: AES128-CCM
+
+	my ($data, $passwd) = @_;
+
+	my @data = split(/:/, $data);
+	return if @data != 4;
+
+	my $iter = int($data[0]);
+	my $salt = decode_hex($data[1]);
+	my $iv   = decode_hex($data[2]);
+	my $ct   = decode_hex($data[3]);
+	my $ks   = 128 / 8;
+	my $ts   = 64 / 8;
+
+	my $key  = pbkdf2($passwd, $salt, $iter, "SHA256", $ks);
+	my $tag  = substr($ct, -$ts, $ts, "");
+
+	return ocb2_decrypt_verify("AES", $key, $iv, "", $ct, $tag)
 	       // _die("decryption failed");
 }
 
@@ -482,6 +586,9 @@ sub dl_cryptobin {
 	if (!length $frag) {
 		$frag = _prompt("password?");
 	}
+	if (!length $frag) {
+		_die("cannot decrypt without key/password");
+	}
 
 	my $body = get($url);
 	$body =~ m{<textarea name="cipher">(.+?)</textarea} || return;
@@ -489,6 +596,34 @@ sub dl_cryptobin {
 	my $data = decode_base64($1);
 	$data = decrypt_sjcl($frag, $data);
 	return $data;
+}
+
+sub dl_defuse {
+	my ($url, $frag) = @_;
+
+	my $body = get($url);
+
+	if ($body =~ m{<textarea id="paste"[^>]*>(.+?)</textarea>}) {
+		my $data = $1;
+		$data = decode_html($data);
+		return $data;
+	}
+
+	if ($body =~ m{var encrypted = "(.+?)";$}m) {
+		if (!length $frag) {
+			$frag = _prompt("password?");
+		}
+		if (!length $frag) {
+			_die("cannot decrypt without key/password");
+		}
+
+		my $data = $1;
+		$data = decode_cescape($data);
+		$data = decrypt_defuse($data, $frag);
+		return $data;
+	}
+
+	return;
 }
 
 sub dl_ezcrypt {
@@ -655,6 +790,10 @@ sub dl_dgl_pastesh {
 		host => "paste.debian.net",
 		path => qr!^/(\d+)!,
 		to_path => "/plain/#1",
+	},
+	{
+		host => "defuse.ca",
+		parser => \&dl_defuse,
 	},
 	{
 		host => "dpaste.com",
