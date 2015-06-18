@@ -440,9 +440,9 @@ sub decrypt_defuse {
 	Crypt::AuthEnc::OCB->import(":all");
 	Crypt::KeyDerivation->import("pbkdf2");
 
-	# serialization: JSON
+	# serialization: custom [iter + salt + iv + data]
 	# key derivation: PBKDF2-SHA256
-	# encryption: AES128-CCM
+	# encryption: AES128-OCB2
 
 	my ($data, $passwd) = @_;
 
