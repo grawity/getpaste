@@ -476,6 +476,21 @@ sub dl_0bin {
 	return $data;
 }
 
+sub dl_cryptobin {
+	my ($url, $frag) = @_;
+
+	if (!length $frag) {
+		$frag = _prompt("password?");
+	}
+
+	my $body = get($url);
+	$body =~ m{<textarea name="cipher">(.+?)</textarea} || return;
+
+	my $data = decode_base64($1);
+	$data = decrypt_sjcl($frag, $data);
+	return $data;
+}
+
 sub dl_ezcrypt {
 	eval {
 		require Crypt::Digest::SHA1;
@@ -631,6 +646,10 @@ sub dl_dgl_pastesh {
 		host => "codepad.org",
 		path => qr!^/\w+!,
 		to_path => "#0/raw.txt",
+	},
+	{
+		host => "cryptobin.org",
+		parser => \&dl_cryptobin,
 	},
 	{
 		host => "paste.debian.net",
