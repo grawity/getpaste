@@ -497,14 +497,14 @@ sub decrypt_ezcrypt {
 	# key derivation: PBKDF2-SHA1
 	# encryption: AES-256-OFB
 
-	my ($data, $frag) = @_;
+	my ($data, $passwd) = @_;
 
 	my $ks   = Crypt::Cipher::AES->keysize;
 	my $bs   = Crypt::Cipher::AES->blocksize;
 
 	my $salt = substr($data, 0, $bs, "");
 	my $iter = 1; # LOL
-	my $key  = pbkdf2($frag, $salt, $iter, "SHA1", $ks);
+	my $key  = pbkdf2($passwd, $salt, $iter, "SHA1", $ks);
 	my $iv   = $salt;
 
 	return Crypt::Mode::OFB->new("AES")->decrypt($data, $key, $iv);
@@ -520,7 +520,7 @@ sub decrypt_openssl {
 	# key derivation: EVP_BytesToKey (usually MD5)
 	# encryption: AES-256-CBC
 
-	my ($data, $frag, %opt) = @_;
+	my ($data, $passwd, %opt) = @_;
 
 	my $ks    = Crypt::Cipher::AES->keysize;
 	my $bs    = Crypt::Cipher::AES->blocksize;
@@ -531,7 +531,7 @@ sub decrypt_openssl {
 	if ($magic ne "Salted__") {
 		_die("bad magic value in encrypted data");
 	}
-	my ($key, $iv) = EVP_BytesToKey($salt, $frag, $ks, $bs, %opt);
+	my ($key, $iv) = EVP_BytesToKey($salt, $passwd, $ks, $bs, %opt);
 
 	return Crypt::Mode::CBC->new("AES")->decrypt($data, $key, $iv);
 }
@@ -549,7 +549,7 @@ sub decrypt_sjcl {
 	# key derivation: PBKDF2-SHA256
 	# encryption: AES128-CCM
 
-	my ($frag, $json) = @_;
+	my ($json, $passwd) = @_;
 
 	my $data = try_decode_json($json);
 
@@ -571,7 +571,7 @@ sub decrypt_sjcl {
 	my $ts   = int($data->{ts} || 64) / 8; # tag size
 	my $hdr  = decode_base64($data->{adata} // "");
 
-	my $key  = pbkdf2($frag, $salt, $iter, "SHA256", $ks);
+	my $key  = pbkdf2($passwd, $salt, $iter, "SHA256", $ks);
 	my $tag  = substr($ct, -$ts, $ts, "");
 
 	return ccm_decrypt_verify("AES", $key, $iv, $hdr, $ct, $tag)
@@ -656,11 +656,11 @@ sub dl_dgl_pastesh {
 
 	my $body = get($url) // return;
 	$body =~ s/^(.+)\n//;
-	my $key = $id . $1 . $frag . "https://paste.sh";
+	my $passwd = $id . $1 . $frag . "https://paste.sh";
 
-	$body = decode_base64($body);
-	$body = decrypt_openssl($body, $key, (kdf_algo => "SHA512"));
-	return $body;
+	my $data = decode_base64($body);
+	$data = decrypt_openssl($data, $passwd, (kdf_algo => "SHA512"));
+	return $data;
 }
 
 sub dl_ezcrypt {
