@@ -497,7 +497,7 @@ sub decrypt_ezcrypt {
 	# key derivation: PBKDF2-SHA1
 	# encryption: AES-256-OFB
 
-	my ($frag, $data) = @_;
+	my ($data, $frag) = @_;
 
 	my $ks   = Crypt::Cipher::AES->keysize;
 	my $bs   = Crypt::Cipher::AES->blocksize;
@@ -520,7 +520,7 @@ sub decrypt_openssl {
 	# key derivation: EVP_BytesToKey (usually MD5)
 	# encryption: AES-256-CBC
 
-	my ($frag, $data, %opt) = @_;
+	my ($data, $frag, %opt) = @_;
 
 	my $ks    = Crypt::Cipher::AES->keysize;
 	my $bs    = Crypt::Cipher::AES->blocksize;
@@ -595,7 +595,7 @@ sub dl_0bin {
 	$body =~ m{<code>\n\s*(\{.+\})\n\s*</code>} || return;
 
 	my $data = decode_html($1);
-	$data = decrypt_sjcl($frag, $data);
+	$data = decrypt_sjcl($data, $frag);
 	$data = decode_base64($data);
 	#$data = decompress_lzw($data);
 	return $data;
@@ -615,7 +615,7 @@ sub dl_cryptobin {
 	$body =~ m{<textarea name="cipher">(.+?)</textarea} || return;
 
 	my $data = decode_base64($1);
-	$data = decrypt_sjcl($frag, $data);
+	$data = decrypt_sjcl($data, $frag);
 	return $data;
 }
 
@@ -659,7 +659,7 @@ sub dl_dgl_pastesh {
 	my $key = $id . $1 . $frag . "https://paste.sh";
 
 	$body = decode_base64($body);
-	$body = decrypt_openssl($key, $body, (kdf_algo => "SHA512"));
+	$body = decrypt_openssl($body, $key, (kdf_algo => "SHA512"));
 	return $body;
 }
 
@@ -702,7 +702,7 @@ sub dl_ezcrypt {
 	}
 
 	$data = decode_base64($data);
-	$data = decrypt_ezcrypt($frag, $data);
+	$data = decrypt_ezcrypt($data, $frag);
 	return $data;
 }
 
@@ -715,7 +715,7 @@ sub dl_kopy {
 	my $data = $body->{data};
 	if (($body->{security} // "") eq "encrypted") {
 		$data = decode_base64($data);
-		$data = decrypt_openssl($frag, $data);
+		$data = decrypt_openssl($data, $frag);
 	}
 	return $data;
 }
@@ -743,7 +743,7 @@ sub dl_sour {
 	}
 
 	my $data = decode_base64($body[1]);
-	$data = decrypt_openssl($frag, $data);
+	$data = decrypt_openssl($data, $frag);
 	if (($headers{zip} // "") eq "True") {
 		$data = decompress_gzip($data);
 	}
@@ -762,7 +762,7 @@ sub dl_zerobin {
 
 	my $data = decode_html($1);
 	$data = decode_json($data)->[0]->{data};
-	$data = decrypt_sjcl($frag, $data);
+	$data = decrypt_sjcl($data, $frag);
 	$data = decode_base64($data);
 	$data = decompress_deflate($data);
 	return $data;
