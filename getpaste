@@ -313,6 +313,57 @@ sub try_decode_json {
 }
 
 # }}}
+# decompressors {{{
+
+sub decompress_deflate {
+	eval {
+		require Compress::Raw::Zlib;
+	} or _die("missing Perl package 'Compress::Raw::Zlib'");
+
+	my ($buf, %opt) = @_;
+
+	my $wbits;
+	my $stream;
+	my $status;
+	my $outbuf;
+
+	if ($opt{is_gzip}) {
+		$wbits = Compress::Raw::Zlib->WANT_GZIP;
+	} else {
+		$wbits = -Compress::Raw::Zlib->MAX_WBITS;
+	}
+
+	($stream, $status) = Compress::Raw::Zlib::Inflate->new(-WindowBits => $wbits);
+	if ($status != Compress::Raw::Zlib->Z_OK) {
+		_die("inflateInit failed: $status");
+	}
+
+	$status = $stream->inflate($buf, $outbuf);
+	if ($status != Compress::Raw::Zlib->Z_OK &&
+	    $status != Compress::Raw::Zlib->Z_STREAM_END) {
+		_die("inflate failed: $status (".$stream->msg.")");
+	}
+
+	return $outbuf;
+}
+
+sub decompress_gzip {
+	my ($buf) = @_;
+
+	return decompress_deflate($buf, is_gzip => 1);
+}
+
+sub decompress_lzw {
+	eval {
+		require Compress::LZW;
+	} or _die("missing Perl package 'Compress::LZW'");
+
+	my ($buf) = @_;
+
+	return Compress::LZW->decompress($buf);
+}
+
+# }}}
 # extra KDFs {{{
 
 sub EVP_BytesToKey {
@@ -393,57 +444,6 @@ sub ocb2_decrypt_verify {
 
 	return if $checksum ne $tag;
 	return $output;
-}
-
-# }}}
-# decompressors {{{
-
-sub decompress_deflate {
-	eval {
-		require Compress::Raw::Zlib;
-	} or _die("missing Perl package 'Compress::Raw::Zlib'");
-
-	my ($buf, %opt) = @_;
-
-	my $wbits;
-	my $stream;
-	my $status;
-	my $outbuf;
-
-	if ($opt{is_gzip}) {
-		$wbits = Compress::Raw::Zlib->WANT_GZIP;
-	} else {
-		$wbits = -Compress::Raw::Zlib->MAX_WBITS;
-	}
-
-	($stream, $status) = Compress::Raw::Zlib::Inflate->new(-WindowBits => $wbits);
-	if ($status != Compress::Raw::Zlib->Z_OK) {
-		_die("inflateInit failed: $status");
-	}
-
-	$status = $stream->inflate($buf, $outbuf);
-	if ($status != Compress::Raw::Zlib->Z_OK &&
-	    $status != Compress::Raw::Zlib->Z_STREAM_END) {
-		_die("inflate failed: $status (".$stream->msg.")");
-	}
-
-	return $outbuf;
-}
-
-sub decompress_gzip {
-	my ($buf) = @_;
-
-	return decompress_deflate($buf, is_gzip => 1);
-}
-
-sub decompress_lzw {
-	eval {
-		require Compress::LZW;
-	} or _die("missing Perl package 'Compress::LZW'");
-
-	my ($buf) = @_;
-
-	return Compress::LZW->decompress($buf);
 }
 
 # }}}
