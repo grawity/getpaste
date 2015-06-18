@@ -31,17 +31,23 @@ BEGIN {
 	}
 }
 
+sub chunk {
+	my ($buf, $bs) = @_;
+
+	return unpack("(A$bs)*", $buf);
+}
+
+sub _dump {
+	use Data::Dumper;
+	return Data::Dumper->new(\@_)->Terse(1)->Indent(0)->Dump;
+}
+
 sub _prompt {
 	my ($msg) = @_;
 
 	print STDERR "\e[1m$msg\e[m "; $|++;
 	chomp(my $resp = <STDIN>);
 	return $resp;
-}
-
-sub _dump {
-	use Data::Dumper;
-	return Data::Dumper->new(\@_)->Terse(1)->Indent(0)->Dump;
 }
 
 # }}}
@@ -268,25 +274,26 @@ sub follow {
 }
 
 # }}}
-# DECRYPTORS {{{
-
-sub chunk {
-	my ($buf, $bs) = @_;
-
-	return unpack("(A$bs)*", $buf);
-}
-
-sub decode_hex {
-	my ($str) = @_;
-
-	return pack("H*", $str);
-}
+# decoders {{{
 
 sub decode_sour_base64 {
 	my ($str) = @_;
 
 	$str =~ y!_-!/+!;
 	return decode_base64($str);
+}
+
+sub decode_cescape {
+	my ($str) = @_;
+
+	$str =~ s/\\x([0-9A-Fa-f]{2})/chr hex $1/ge;
+	return $str;
+}
+
+sub decode_hex {
+	my ($str) = @_;
+
+	return pack("H*", $str);
 }
 
 sub decode_html {
@@ -299,18 +306,14 @@ sub decode_html {
 	return $str;
 }
 
-sub decode_cescape {
-	my ($str) = @_;
-
-	$str =~ s/\\x([0-9A-Fa-f]{2})/chr hex $1/ge;
-	return $str;
-}
-
 sub try_decode_json {
 	my ($data) = @_;
 
 	return ref $data ? $data : decode_json($data);
 }
+
+# }}}
+# DECRYPTORS {{{
 
 sub EVP_BytesToKey {
 	eval {
