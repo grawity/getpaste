@@ -313,7 +313,7 @@ sub try_decode_json {
 }
 
 # }}}
-# DECRYPTORS {{{
+# extra KDFs {{{
 
 sub EVP_BytesToKey {
 	eval {
@@ -339,7 +339,10 @@ sub EVP_BytesToKey {
 	return ($key, $iv);
 }
 
-sub ocb_times2 {
+# }}}
+# extra ciphers {{{
+
+sub ocb2_times2 {
 	my ($block) = @_;
 
 	my @block = unpack("C*", $block);
@@ -369,13 +372,13 @@ sub ocb2_decrypt_verify {
 	my $final      = pop(@ciphertext);
 	my $nfinal     = length($final);
 	my $pad        = pack("N*", 0, 0, 0, $nfinal * 8);
-	my $delta      = ocb_times2($c->encrypt($nonce));
+	my $delta      = ocb2_times2($c->encrypt($nonce));
 	my $checksum   = "\x00" x $bs;
 	my $output     = "";
 
 	for my $block (@ciphertext) {
 		$block = $c->decrypt($block ^ $delta) ^ $delta;
-		$delta = ocb_times2($delta);
+		$delta = ocb2_times2($delta);
 		$output .= $block;
 		$checksum ^= $block;
 	}
@@ -384,13 +387,16 @@ sub ocb2_decrypt_verify {
 	$output .= substr($final, 0, $nfinal);
 	$checksum ^= $final;
 
-	$checksum = $c->encrypt($checksum ^ $delta ^ ocb_times2($delta));
+	$checksum = $c->encrypt($checksum ^ $delta ^ ocb2_times2($delta));
 	$checksum ^= pmac($cipher, $key, $aad) if length($aad);
 	$checksum = substr($checksum, 0, $ts);
 
 	return if $checksum ne $tag;
 	return $output;
 }
+
+# }}}
+# DECRYPTORS {{{
 
 sub decrypt_sjcl {
 	eval {
