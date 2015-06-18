@@ -452,7 +452,7 @@ sub ocb2_decrypt_verify {
 # These functions parse an encrypted/wrapped package (obtaining cipher, salt,
 # iterations, IV...) and return decrypted/unwrapped data.
 
-sub decrypt_defuse {
+sub unwrap_defuse {
 	eval {
 		require Crypt::AuthEnc::OCB;
 		require Crypt::KeyDerivation;
@@ -484,7 +484,7 @@ sub decrypt_defuse {
 	       // _die("decryption failed");
 }
 
-sub decrypt_ezcrypt {
+sub unwrap_ezcrypt {
 	eval {
 		require Crypt::Cipher::AES;
 		require Crypt::KeyDerivation;
@@ -510,7 +510,7 @@ sub decrypt_ezcrypt {
 	return Crypt::Mode::OFB->new("AES")->decrypt($data, $key, $iv);
 }
 
-sub decrypt_openssl {
+sub unwrap_openssl {
 	eval {
 		require Crypt::Cipher::AES;
 		require Crypt::Mode::CBC;
@@ -536,7 +536,7 @@ sub decrypt_openssl {
 	return Crypt::Mode::CBC->new("AES")->decrypt($data, $key, $iv);
 }
 
-sub decrypt_sjcl {
+sub unwrap_sjcl {
 	eval {
 		require Crypt::AuthEnc::CCM;
 		require Crypt::KeyDerivation;
@@ -595,7 +595,7 @@ sub dl_0bin {
 	$body =~ m{<code>\n\s*(\{.+\})\n\s*</code>} || return;
 
 	my $data = decode_html($1);
-	$data = decrypt_sjcl($data, $frag);
+	$data = unwrap_sjcl($data, $frag);
 	$data = decode_base64($data);
 	#$data = decompress_lzw($data);
 	return $data;
@@ -615,7 +615,7 @@ sub dl_cryptobin {
 	$body =~ m{<textarea name="cipher">(.+?)</textarea} || return;
 
 	my $data = decode_base64($1);
-	$data = decrypt_sjcl($data, $frag);
+	$data = unwrap_sjcl($data, $frag);
 	return $data;
 }
 
@@ -640,7 +640,7 @@ sub dl_defuse {
 
 		my $data = $1;
 		$data = decode_cescape($data);
-		$data = decrypt_defuse($data, $frag);
+		$data = unwrap_defuse($data, $frag);
 		return $data;
 	}
 
@@ -659,7 +659,7 @@ sub dl_dgl_pastesh {
 	my $passwd = $id . $1 . $frag . "https://paste.sh";
 
 	my $data = decode_base64($body);
-	$data = decrypt_openssl($data, $passwd, (kdf_algo => "SHA512"));
+	$data = unwrap_openssl($data, $passwd, (kdf_algo => "SHA512"));
 	return $data;
 }
 
@@ -702,7 +702,7 @@ sub dl_ezcrypt {
 	}
 
 	$data = decode_base64($data);
-	$data = decrypt_ezcrypt($data, $frag);
+	$data = unwrap_ezcrypt($data, $frag);
 	return $data;
 }
 
@@ -715,7 +715,7 @@ sub dl_kopy {
 	my $data = $body->{data};
 	if (($body->{security} // "") eq "encrypted") {
 		$data = decode_base64($data);
-		$data = decrypt_openssl($data, $frag);
+		$data = unwrap_openssl($data, $frag);
 	}
 	return $data;
 }
@@ -743,7 +743,7 @@ sub dl_sour {
 	}
 
 	my $data = decode_base64($body[1]);
-	$data = decrypt_openssl($data, $frag);
+	$data = unwrap_openssl($data, $frag);
 	if (($headers{zip} // "") eq "True") {
 		$data = decompress_gzip($data);
 	}
@@ -762,7 +762,7 @@ sub dl_zerobin {
 
 	my $data = decode_html($1);
 	$data = decode_json($data)->[0]->{data};
-	$data = decrypt_sjcl($data, $frag);
+	$data = unwrap_sjcl($data, $frag);
 	$data = decode_base64($data);
 	$data = decompress_deflate($data);
 	return $data;
