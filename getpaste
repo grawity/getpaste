@@ -580,6 +580,9 @@ sub decrypt_sjcl {
 
 # }}}
 # downloaders {{{
+#
+# These functions take an URL, extract the wrapped package from it, and call an
+# apropriate unwrapper.
 
 sub dl_0bin {
 	my ($url, $frag) = @_;
@@ -644,6 +647,22 @@ sub dl_defuse {
 	return;
 }
 
+sub dl_dgl_pastesh {
+	my ($url, $frag) = @_;
+
+	my %url = parse_url($url);
+	$url{path} =~ m!^/([^.]+)!;
+	my $id = $1;
+
+	my $body = get($url) // return;
+	$body =~ s/^(.+)\n//;
+	my $key = $id . $1 . $frag . "https://paste.sh";
+
+	$body = decode_base64($body);
+	$body = decrypt_openssl($key, $body, (kdf_algo => "SHA512"));
+	return $body;
+}
+
 sub dl_ezcrypt {
 	eval {
 		require Crypt::Digest::SHA1;
@@ -687,21 +706,17 @@ sub dl_ezcrypt {
 	return $data;
 }
 
-sub dl_zerobin {
+sub dl_kopy {
 	my ($url, $frag) = @_;
 
-	if (!length $frag) {
-		_die("cannot decrypt without key in URL fragment");
-	}
-
 	my $body = get($url) // return;
-	$body =~ m{<div id="cipherdata" style="display:none;">(.+)</div>} || return;
+	$body = decode_json($body);
 
-	my $data = decode_html($1);
-	$data = decode_json($data)->[0]->{data};
-	$data = decrypt_sjcl($frag, $data);
-	$data = decode_base64($data);
-	$data = decompress_deflate($data);
+	my $data = $body->{data};
+	if (($body->{security} // "") eq "encrypted") {
+		$data = decode_base64($data);
+		$data = decrypt_openssl($frag, $data);
+	}
 	return $data;
 }
 
@@ -735,34 +750,22 @@ sub dl_sour {
 	return $data;
 }
 
-sub dl_kopy {
+sub dl_zerobin {
 	my ($url, $frag) = @_;
 
-	my $body = get($url) // return;
-	$body = decode_json($body);
-
-	my $data = $body->{data};
-	if (($body->{security} // "") eq "encrypted") {
-		$data = decode_base64($data);
-		$data = decrypt_openssl($frag, $data);
+	if (!length $frag) {
+		_die("cannot decrypt without key in URL fragment");
 	}
-	return $data;
-}
-
-sub dl_dgl_pastesh {
-	my ($url, $frag) = @_;
-
-	my %url = parse_url($url);
-	$url{path} =~ m!^/([^.]+)!;
-	my $id = $1;
 
 	my $body = get($url) // return;
-	$body =~ s/^(.+)\n//;
-	my $key = $id . $1 . $frag . "https://paste.sh";
+	$body =~ m{<div id="cipherdata" style="display:none;">(.+)</div>} || return;
 
-	$body = decode_base64($body);
-	$body = decrypt_openssl($key, $body, (kdf_algo => "SHA512"));
-	return $body;
+	my $data = decode_html($1);
+	$data = decode_json($data)->[0]->{data};
+	$data = decrypt_sjcl($frag, $data);
+	$data = decode_base64($data);
+	$data = decompress_deflate($data);
+	return $data;
 }
 
 # }}}
