@@ -916,7 +916,7 @@ sub dl_zerobin {
 	},
 	{
 		host => "pastie.org",
-		path => qr!^/(\d+)!,
+		path => qr!^(?:/pastes)?/(\d+)!,
 		to_path => "/pastes/#1/download",
 	},
 	{
