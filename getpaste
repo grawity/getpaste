@@ -52,7 +52,7 @@ sub _prompt {
 }
 
 sub check_deps {
-	require Compress::LZW;
+	#require Compress::LZW;
 	require Compress::Raw::Zlib;
 	require CryptX;
 	exit;
