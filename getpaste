@@ -22,9 +22,9 @@ BEGIN {
 		Nullroute::Lib->import(qw(_debug _warn _err _die));
 	} else {
 		$::arg0 = (split m!/!, $0)[-1];
+		$::debug = !!$ENV{DEBUG};
 		$::warnings = 0;
 		$::errors = 0;
-		$::debug = !!$ENV{DEBUG};
 		sub _debug { warn "debug: @_\n" if $::debug; }
 		sub _warn  { warn "warning: @_\n"; ++$::warnings; }
 		sub _err   { warn "error: @_\n"; ! ++$::errors; }
