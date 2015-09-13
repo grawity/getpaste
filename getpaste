@@ -51,6 +51,13 @@ sub _prompt {
 	return $resp;
 }
 
+sub check_deps {
+	require Compress::LZW;
+	require Compress::Raw::Zlib;
+	require CryptX;
+	exit;
+}
+
 # }}}
 # URL parsing functions {{{
 
@@ -967,6 +974,7 @@ sub usage {
 
 GetOptions(
 	"help"		=> sub { usage(); exit; },
+	"check-deps"	=> \&check_deps,
 	"k|insecure"	=> \$opt_insecure,
 	"u|show-url"	=> \$opt_show_url,
 ) or exit 2;
