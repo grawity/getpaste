@@ -7,6 +7,7 @@ use v5.10;
 use warnings;
 use strict;
 no locale;
+use open qw(:std :utf8);
 use Getopt::Long qw(:config bundling no_ignore_case);
 use JSON;
 use LWP::UserAgent;
