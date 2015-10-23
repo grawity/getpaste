@@ -938,11 +938,6 @@ sub dl_zerobin {
 		to_path => "/pastes/#1/download",
 	},
 	{
-		host => "privatepaste.com",
-		path => qr!^/(\w+)!,
-		to_path => "/download/#1",
-	},
-	{
 		host => "www.refheap.com",
 		path => qr!^/\d+!,
 		to_path => "#0/raw",
