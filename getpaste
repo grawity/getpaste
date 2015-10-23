@@ -947,6 +947,11 @@ sub dl_zerobin {
 		to_path => "#0/raw",
 	},
 	{
+		host => "paste.scratchbook.ch",
+		path => qr!^/view/(\w+)$!,
+		to_path => "/view/raw/#1",
+	},
+	{
 		host => ["sour.is", "dn42.us"],
 		path => "/p/",
 		fragment => qr{^/(.+)!(.+)},
