@@ -813,6 +813,11 @@ sub dl_zerobin {
 		parser => \&dl_0bin,
 	},
 	{
+		host => "bpaste.net",
+		path => qr!^/\w+/(\w+)!,
+		to_path => "/raw/#1",
+	},
+	{
 		host => qr/^(dark-)?code\.bulix\.org$/,
 		to_query => "raw",
 	},
