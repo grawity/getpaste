@@ -969,6 +969,11 @@ sub dl_zerobin {
 	{
 		host => "termbin.com",
 	},
+	{
+		host => "vomitb.in",
+		path => qr!^/(\w+)!,
+		to_path => "/raw/#1",
+	},
 	# generic (wild guess)
 	{
 		query => qr/^[0-9a-f]{16}$/,
