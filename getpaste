@@ -240,6 +240,7 @@ sub get {
 	my ($url) = @_;
 
 	_debug("fetching '$url'");
+	$UA->default_header("Referer" => $url);
 	my $resp = $UA->get($url);
 
 	if ($resp->is_success) {
@@ -264,6 +265,7 @@ sub post {
 	my ($url, %form) = @_;
 
 	_debug("posting to '$url'");
+	$UA->default_header("Referer" => $url);
 	my $resp = $UA->post($url, \%form);
 
 	if ($resp->is_success) {
@@ -279,6 +281,7 @@ sub follow {
 	my ($url) = @_;
 
 	_debug("following '$url'");
+	$UA->default_header("Referer" => $url);
 	my $resp = $UA->head($url);
 
 	if ($resp->is_success) {
