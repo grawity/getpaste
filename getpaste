@@ -531,6 +531,20 @@ sub unwrap_ezcrypt {
 	return Crypt::Mode::OFB->new("AES")->decrypt($data, $key, $iv);
 }
 
+sub unwrap_ncrypt {
+	my ($data, $passwd, $cipher) = @_;
+
+	# serialization: JSON {data: raw [salt + data], cipher}
+	# key derivation: PBKDF2-SHA1
+	# encryption: AES-256-OFB (usually?)
+
+	if ($cipher eq "AES-256-OFB") {
+		return unwrap_ezcrypt($data, $passwd);
+	} else {
+		_die("unknown cipher '$cipher' for this pastebin");
+	}
+}
+
 sub unwrap_openssl {
 	eval {
 		require Crypt::Cipher::AES;
@@ -741,6 +755,18 @@ sub dl_kopy {
 	return $data;
 }
 
+sub dl_ncrypt {
+	my ($url, $frag) = @_;
+
+	my $body = post($url) // return;
+	$body = decode_json($body);
+
+	my $data = $body->{data};
+	$data = decode_base64($data);
+	$data = unwrap_ncrypt($data, $frag, $body->{cipher});
+	return $data;
+}
+
 sub dl_sour {
 	eval {
 		require Crypt::Digest::RIPEMD160;
@@ -909,6 +935,11 @@ sub dl_zerobin {
 		path => qr!^/(\d+)!,
 		to_path => "",
 		to_query => "dl=#{path.1}",
+	},
+	{
+		host => "ncry.pt",
+		path => qr!^/p/\w+!,
+		parser => \&dl_ncrypt,
 	},
 	{
 		host => "paste.opensuse.org",
