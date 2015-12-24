@@ -987,6 +987,14 @@ sub dl_zerobin {
 		to_path => "/view/raw/#1",
 	},
 	{
+		host => "sour.is",
+		path => "/paste/",
+		fragment => qr{^/(.+)!(.+)},
+		to_path => "/paste/api/get/#{fragment.1}",
+		to_fragment => "#{fragment.2}",
+		parser => \&dl_sour,
+	},
+	{
 		host => ["sour.is", "dn42.us"],
 		path => "/p/",
 		fragment => qr{^/(.+)!(.+)},
