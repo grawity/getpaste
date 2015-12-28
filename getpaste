@@ -213,6 +213,7 @@ sub retrieve_paste {
 		if ($handler) {
 			my $output = $handler->($raw_url, @hargs);
 			if (defined $output) {
+				utf8::decode($output);
 				print "$output\n";
 			} else {
 				_err("paste extraction failed");
