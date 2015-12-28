@@ -801,7 +801,7 @@ sub dl_sour {
 
 	my $data = decode_base64($body[1]);
 	$data = unwrap_openssl($data, $frag);
-	if (($headers{zip} // "") eq "True") {
+	if (lc($headers{zip} // "") eq "true") {
 		$data = decompress_gzip($data);
 	}
 	return $data;
