@@ -799,6 +799,9 @@ sub dl_sour {
 			_die("decryption failed (incorrect key)");
 		}
 	}
+	if ($headers{exp} eq "burn_on_read") {
+		_warn("burn-on-read was set for this paste");
+	}
 
 	my $data = decode_base64($body[1]);
 	$data = unwrap_openssl($data, $frag);
