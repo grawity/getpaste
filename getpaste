@@ -800,7 +800,7 @@ sub dl_sour {
 		}
 	}
 	if ($headers{exp} eq "burn_on_read") {
-		_warn("burn-on-read was set for this paste");
+		_warn("this paste is destroyed after first access (burn-on-read)");
 	}
 
 	my $data = decode_base64($body[1]);
