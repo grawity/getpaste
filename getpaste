@@ -311,6 +311,12 @@ sub decode_cescape {
 	return $str;
 }
 
+sub encode_hex {
+	my ($buf) = @_;
+
+	return unpack("H*", $buf);
+}
+
 sub decode_hex {
 	my ($str) = @_;
 
@@ -566,7 +572,11 @@ sub unwrap_openssl {
 	if ($magic ne "Salted__") {
 		_die("bad magic value in encrypted data");
 	}
+
 	my ($key, $iv) = EVP_BytesToKey($salt, $passwd, $ks, $bs, %opt);
+
+	_debug("key: <".encode_hex($key).">");
+	_debug("iv: <".encode_hex($iv).">");
 
 	return Crypt::Mode::CBC->new("AES")->decrypt($data, $key, $iv);
 }
