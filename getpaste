@@ -846,6 +846,14 @@ sub dl_zerobin {
 @SITES = (
 	# generic (forced)
 	{
+		scheme => qr/^sour\+(.+)$/,
+		fragment => qr{^/(.+)!(.+)},
+		to_scheme => "#1",
+		to_path => "#{path.0}/api/get/#{fragment.1}",
+		to_fragment => "#{fragment.2}",
+		parser => \&dl_sour,
+	},
+	{
 		scheme => qr/^zerobin\+(.+)$/,
 		to_scheme => "#1",
 		parser => \&dl_zerobin,
