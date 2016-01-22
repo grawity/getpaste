@@ -799,7 +799,7 @@ sub dl_sour {
 			_die("decryption failed (incorrect key)");
 		}
 	}
-	if ($headers{exp} eq "burn_on_read") {
+	if (($headers{exp} // "") eq "burn_on_read") {
 		_warn("this paste is destroyed after first access (burn-on-read)");
 	}
 
