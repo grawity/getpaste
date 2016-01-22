@@ -943,13 +943,6 @@ sub dl_zerobin {
 		parser => \&dl_kopy,
 	},
 	{
-		host => "paste.linuxlounge.net",
-		fragment => qr{^/(.+)!(.+)},
-		to_path => "#{path.0}api/get/#{fragment.1}",
-		to_fragment => "#{fragment.2}",
-		parser => \&dl_sour,
-	},
-	{
 		host => "paste.lisp.org",
 		path => qr!^/display/\d+!,
 		to_path => "#0/raw",
@@ -1038,6 +1031,14 @@ sub dl_zerobin {
 		to_path => "/raw/#1",
 	},
 	# generic (wild guess)
+	{
+		path => qr{/$},
+		fragment => qr{^/(\w{27})!(\w{32})$},
+		to_path => "#{path.0}api/get/#{fragment.1}",
+		to_fragment => "#{fragment.2}",
+		note => "probably a Sour.is site based on query & fragment",
+		parser => \&dl_sour,
+	},
 	{
 		query => qr/^[0-9a-f]{16}$/,
 		fragment => qr{^[0-9A-Za-z+/]{43}=$},
