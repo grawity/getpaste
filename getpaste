@@ -935,6 +935,13 @@ sub dl_zerobin {
 		parser => \&dl_kopy,
 	},
 	{
+		host => "paste.linuxlounge.net",
+		fragment => qr{^/(.+)!(.+)},
+		to_path => "#{path.0}/api/get/#{fragment.1}",
+		to_fragment => "#{fragment.2}",
+		parser => \&dl_sour,
+	},
+	{
 		host => "paste.lisp.org",
 		path => qr!^/display/\d+!,
 		to_path => "#0/raw",
@@ -1004,7 +1011,7 @@ sub dl_zerobin {
 		host => "sour.is",
 		path => "/paste/",
 		fragment => qr{^/(.+)!(.+)},
-		to_path => "/paste/api/get/#{fragment.1}",
+		to_path => "#{path.0}/api/get/#{fragment.1}",
 		to_fragment => "#{fragment.2}",
 		parser => \&dl_sour,
 	},
