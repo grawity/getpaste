@@ -1009,6 +1009,11 @@ sub dl_zerobin {
 		to_path => "/view/raw/#1",
 	},
 	{
+		host => "fpaste.scsys.co.uk",
+		path => qr!^/\d+!,
+		to_query => "tx=on",
+	},
+	{
 		host => "sour.is",
 		path => "/paste/",
 		fragment => qr{^/(.+)!(.+)},
