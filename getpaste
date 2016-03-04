@@ -552,7 +552,7 @@ sub unwrap_ncrypt {
 	}
 }
 
-sub unwrap_openssl {
+sub unwrap_openssl_aes {
 	eval {
 		require Crypt::Cipher::AES;
 		require Crypt::Mode::CBC;
@@ -705,7 +705,7 @@ sub dl_dgl_pastesh {
 	my $passwd = $id . $1 . $frag . "https://paste.sh";
 
 	my $data = decode_base64($body);
-	$data = unwrap_openssl($data, $passwd, (kdf_algo => "SHA512"));
+	$data = unwrap_openssl_aes($data, $passwd, (kdf_algo => "SHA512"));
 	return $data;
 }
 
@@ -761,7 +761,7 @@ sub dl_kopy {
 	my $data = $body->{data};
 	if (($body->{security} // "") eq "encrypted") {
 		$data = decode_base64($data);
-		$data = unwrap_openssl($data, $frag);
+		$data = unwrap_openssl_aes($data, $frag);
 	}
 	return $data;
 }
@@ -804,7 +804,7 @@ sub dl_sour {
 	}
 
 	my $data = decode_base64($body[1]);
-	$data = unwrap_openssl($data, $frag);
+	$data = unwrap_openssl_aes($data, $frag);
 	if (lc($headers{zip} // "") eq "true") {
 		$data = decompress_gzip($data);
 	}
