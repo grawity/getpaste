@@ -766,6 +766,15 @@ sub dl_kopy {
 	return $data;
 }
 
+sub dl_basic_cryptojs {
+	my ($url, $frag) = @_;
+
+	my $data = get($url) // return;
+	$data = decode_base64($data);
+	$data = unwrap_openssl_aes($data, $frag);
+	return $data;
+}
+
 sub dl_ncrypt {
 	my ($url, $frag) = @_;
 
@@ -951,6 +960,12 @@ sub dl_zerobin {
 		host => "paste.lisp.org",
 		path => qr!^/\+!,
 		parser => \&dl_recursive,
+	},
+	{
+		host => "paste.lukej.me",
+		path => qr!^/(\w+)!,
+		to_path => "/raw/#1",
+		parser => \&dl_basic_cryptojs,
 	},
 	{
 		host => "pastebin.mozilla.org",
