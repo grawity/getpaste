@@ -828,13 +828,22 @@ sub dl_zerobin {
 	}
 
 	my $body = get($url) // return;
-	$body =~ m{<div id="cipherdata" style="display:none;">(.+)</div>} || return;
+	$body =~ m{<div id="cipherdata" [^>]+>(.+)</div>} || return;
 
 	my $data = decode_html($1);
-	$data = decode_json($data)->[0]->{data};
-	$data = unwrap_sjcl($data, $frag);
-	$data = decode_base64($data);
-	$data = decompress_deflate($data);
+	$data = decode_json($data);
+	if (ref $data eq "ARRAY") {
+		$data = $data->[0]->{data};
+		$data = unwrap_sjcl($data, $frag);
+		$data = decode_base64($data);
+		$data = decompress_deflate($data);
+	} else {
+		$data = $data->{data};
+		$data = decode_json($data);
+		$data = unwrap_sjcl($data, $frag);
+		$data = decode_base64($data);
+		$data = decompress_deflate($data);
+	}
 	return $data;
 }
 
