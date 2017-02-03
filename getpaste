@@ -665,6 +665,8 @@ sub dl_cryptbin_do {
 	$data = decode_json($data);
 	if (@$data > 1 && !$idx) {
 		_warn("only the first file of ".@$data." is shown");
+	} elsif (@$data <= $idx) {
+		_die("paste only has ".@$data." files");
 	}
 	$data = $data->[$idx]->{body};
 	return $data;
