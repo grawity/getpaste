@@ -2,7 +2,7 @@
 # getpaste - retrieves raw text from pastebins
 #
 # (c) 2010-2015 Mantas Mikulėnas <grawity@gmail.com>
-# Released under the MIT Expat License (dist/LICENSE.expat)
+# Released under the MIT License (dist/LICENSE.mit)
 use v5.10;
 use warnings;
 use strict;
@@ -647,6 +647,29 @@ sub dl_0bin {
 	return $data;
 }
 
+sub dl_cryptbin_do {
+	my ($url, $frag) = @_;
+
+	if (!length $frag) {
+		_die("cannot decrypt without key in URL fragment");
+	}
+
+	my $idx = 0;
+	$idx = int $1 if $frag =~ s/,(\d+)$//;
+
+	my $body = get($url);
+	$body =~ m{var message='(.+?)';} || return;
+
+	my $data = decode_base64($1);
+	$data = unwrap_openssl_aes($data, $frag);
+	$data = decode_json($data);
+	if (@$data > 1 && !$idx) {
+		_warn("only the first file of ".@$data." is shown");
+	}
+	$data = $data->[$idx]->{body};
+	return $data;
+}
+
 sub dl_cryptobin {
 	my ($url, $frag) = @_;
 
@@ -894,6 +917,14 @@ sub dl_zerobin {
 		host => "codepad.org",
 		path => qr!^/\w+!,
 		to_path => "#0/raw.txt",
+	},
+	{
+		host => "cryptb.in",
+		parser => \&dl_cryptbin_do,
+	},
+	{
+		host => "cryptbin.com",
+		parser => \&dl_cryptbin_do,
 	},
 	{
 		host => "cryptobin.org",
