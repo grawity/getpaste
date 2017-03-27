@@ -1042,8 +1042,8 @@ sub dl_zerobin {
 	},
 	{
 		host => "pastebin.com",
-		path => qr!^(?:/index)?/(\w+)!,
-		to_path => "/download.php?i=#1",
+		path => qr!^(?:/index|/raw)?/(\w+)!,
+		to_path => "/raw/#1",
 	},
 	{
 		host => "pastebin.de",
