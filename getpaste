@@ -1071,6 +1071,13 @@ sub dl_zerobin {
 		to_query => "tx=on",
 	},
 	{
+		host => "paste.dn42.us",
+		fragment => qr{^/(.+)!(.+)},
+		to_path => "#{path.0}api/get/#{fragment.1}",
+		to_fragment => "#{fragment.2}",
+		parser => \&dl_sour,
+	},
+	{
 		host => "sour.is",
 		path => "/paste/",
 		fragment => qr{^/(.+)!(.+)},
