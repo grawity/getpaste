@@ -8,6 +8,7 @@ use warnings;
 use strict;
 no locale;
 use open qw(:std :utf8);
+use Encode qw(decode);
 use Getopt::Long qw(:config bundling no_ignore_case);
 use JSON;
 use LWP::UserAgent;
@@ -812,6 +813,45 @@ sub dl_ncrypt {
 	return $data;
 }
 
+sub dl_riseup {
+	eval {
+		require Crypt::Digest::SHA512;
+		require Crypt::AuthEnc::CCM;
+	} or _die("missing Perl package 'CryptX'");
+
+	Crypt::Digest::SHA512->import("sha512");
+	Crypt::AuthEnc::CCM->import("ccm_decrypt_verify");
+
+	my ($url, $frag) = @_;
+
+	# obtain file parameters
+
+	my $seed = decode_base64($frag);
+	$seed = sha512($seed);
+	my $key   = substr($seed,  0, 32);
+	my $iv    = substr($seed, 32, 16);
+	my $ident = substr($seed, 48, 16);
+	my $tlen  = 8; # tag size
+
+	# fetch and decrypt file
+
+	$ident = MIME::Base64::encode_base64url($ident);
+	my $body = get("https://share.riseup.net/i/$ident") // return;
+	$body =~ s/^UP1\0//; # optional anti-hotlink header
+	my $tag  = substr($body, -$tlen, $tlen, "");
+	$body = ccm_decrypt_verify("AES", $key, $iv, "", $body, $tag)
+		// _die("decryption failed");
+
+	# strip JSON header
+
+	if ($body =~ s/^(?:..)*\0\0//) {
+		my $header = decode("UTF-16", $&);
+		_debug("header: $header");
+	}
+
+	return $body;
+}
+
 sub dl_sour {
 	eval {
 		require Crypt::Digest::RIPEMD160;
@@ -1059,6 +1099,10 @@ sub dl_zerobin {
 		host => "www.refheap.com",
 		path => qr!^/\d+!,
 		to_path => "#0/raw",
+	},
+	{
+		host => "share.riseup.net",
+		parser => \&dl_riseup,
 	},
 	{
 		host => "paste.scratchbook.ch",
