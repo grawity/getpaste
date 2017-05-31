@@ -610,7 +610,7 @@ sub unwrap_sjcl {
 		_die("unsupported mode ".$data->{mode});
 	}
 
-	my $salt = decode_base64($data->{salt});
+	my $salt = decode_base64($data->{salt} // "");
 	my $ct   = decode_base64($data->{ct});
 	my $iv   = decode_base64($data->{iv});
 	my $iter = int($data->{iter} || 1000),
@@ -618,7 +618,7 @@ sub unwrap_sjcl {
 	my $ts   = int($data->{ts} || 64) / 8; # tag size
 	my $hdr  = decode_base64($data->{adata} // "");
 
-	my $key  = pbkdf2($passwd, $salt, $iter, "SHA256", $ks);
+	my $key  = $salt ? pbkdf2($passwd, $salt, $iter, "SHA256", $ks) : $passwd;
 	my $tag  = substr($ct, -$ts, $ts, "");
 
 	return ccm_decrypt_verify("AES", $key, $iv, $hdr, $ct, $tag)
@@ -645,6 +645,23 @@ sub dl_0bin {
 	$data = unwrap_sjcl($data, $frag);
 	$data = decode_base64($data);
 	#$data = decompress_lzw($data);
+	return $data;
+}
+
+sub dl_nothingnet {
+	my ($url, $frag) = @_;
+
+	if (!length $frag) {
+		_die("cannot decrypt without key in URL fragment");
+	}
+	$frag =~ s/\$.*//;
+	$frag = decode_base64($frag);
+
+	my $body = get($url);
+	$body =~ m{>(\{".+\"\})<} || return;
+
+	my $data = decode_html($1);
+	$data = unwrap_sjcl($data, $frag);
 	return $data;
 }
 
@@ -1059,6 +1076,10 @@ sub dl_zerobin {
 		host => "ncry.pt",
 		path => qr!^/p/\w+!,
 		parser => \&dl_ncrypt,
+	},
+	{
+		host => "paste.nothing.net.nz",
+		parser => \&dl_nothingnet,
 	},
 	{
 		host => "paste.opensuse.org",
