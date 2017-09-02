@@ -1244,7 +1244,7 @@ unless ($ENV{PERL_LWP_SSL_CA_FILE} || $ENV{HTTPS_CA_FILE}) {
 	$UA->ssl_opts(SSL_ca_file => "/etc/ssl/certs/ca-certificates.crt");
 }
 
-$UA->agent("Mozilla/4.0 getpaste/0.42 (http://nullroute.eu.org/) ".$UA->_agent);
+$UA->agent("Mozilla/4.0 getpaste/0.42 (nullroute.eu.org)");
 
 for (@ARGV) {
 	retrieve_paste($_);
