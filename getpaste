@@ -344,7 +344,7 @@ sub try_decode_json {
 # }}}
 # decompressors {{{
 
-sub decompress_deflate {
+sub decompress_zlib {
 	eval {
 		require Compress::Raw::Zlib;
 	} or _die("missing Perl package 'Compress::Raw::Zlib'");
@@ -356,10 +356,25 @@ sub decompress_deflate {
 	my $status;
 	my $outbuf;
 
-	if ($opt{is_gzip}) {
+	if ($opt{is_gzip_or_zlib}) {
+		# autodetect RFC 1950 (zlib) or 1952 (gzip)
+		$wbits = Compress::Raw::Zlib->WANT_GZIP_OR_ZLIB;
+	}
+	elsif ($opt{is_gzip}) {
+		# expect RFC 1952 (gzip)
 		$wbits = Compress::Raw::Zlib->WANT_GZIP;
-	} else {
+	}
+	elsif ($opt{is_deflate}) {
+		# expect RFC 1951 (deflate)
 		$wbits = -Compress::Raw::Zlib->MAX_WBITS;
+	}
+	elsif ($opt{is_zlib}) {
+		# expect RFC 1950 (zlib)
+		$wbits = 15;
+	}
+	else {
+		# mirror the zlib default
+		$wbits = Compress::Raw::Zlib->MAX_WBITS;
 	}
 
 	($stream, $status) = Compress::Raw::Zlib::Inflate->new(-WindowBits => $wbits);
@@ -376,10 +391,16 @@ sub decompress_deflate {
 	return $outbuf;
 }
 
+sub decompress_deflate {
+	my ($buf) = @_;
+
+	return decompress_zlib($buf, is_deflate => 1);
+}
+
 sub decompress_gzip {
 	my ($buf) = @_;
 
-	return decompress_deflate($buf, is_gzip => 1);
+	return decompress_zlib($buf, is_gzip => 1);
 }
 
 sub decompress_lzw {
