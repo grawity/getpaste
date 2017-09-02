@@ -943,7 +943,6 @@ sub dl_zerobin {
 
 	my $body = get($url) // return;
 	$body =~ m{<div id="cipherdata" [^>]+>(.+)</div>} || return;
-
 	my $data = decode_html($1);
 	$data = decode_json($data);
 	if (ref $data eq "ARRAY") {
@@ -956,6 +955,9 @@ sub dl_zerobin {
 		$data = decode_json($data);
 		$data = unwrap_sjcl($data, $frag);
 		$data = decode_base64($data);
+		if ($body =~ /\bPrivateBin\b/) {
+			$data = decode("UTF-8", $data);
+		}
 		$data = decompress_deflate($data);
 	}
 	return $data;
