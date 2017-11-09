@@ -1201,10 +1201,10 @@ sub dl_zerobin {
 	# generic (wild guess)
 	{
 		path => qr{/$},
-		fragment => qr{^/(\w{27})!(\w{32})$},
+		fragment => qr{^/([A-Za-z0-9_-]{27})!([A-Za-z0-9_-]{32,})$},
 		to_path => "#{path.0}api/get/#{fragment.1}",
 		to_fragment => "#{fragment.2}",
-		note => "probably a Sour.is site based on query & fragment",
+		note => "probably a PasteBox/Sour.is site based on query & fragment",
 		parser => \&dl_sour,
 	},
 	{
