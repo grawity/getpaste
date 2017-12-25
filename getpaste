@@ -1201,7 +1201,7 @@ sub dl_zerobin {
 	# generic (wild guess)
 	{
 		path => qr{/$},
-		fragment => qr{^/(\w{27})!(\w{32})$},
+		fragment => qr{^/(\w{27})!(\w{32,43})$},
 		to_path => "#{path.0}api/get/#{fragment.1}",
 		to_fragment => "#{fragment.2}",
 		note => "probably a Sour.is site based on query & fragment",
