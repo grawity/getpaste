@@ -942,7 +942,7 @@ sub dl_zerobin {
 	}
 
 	my $body = get($url) // return;
-	$body =~ m{<div id="cipherdata" [^>]+>(.+)</div>} || return;
+	$body =~ m{<div id="cipherdata"[^>]*>(.+)</div>} || return;
 	my $data = decode_html($1);
 	$data = decode_json($data);
 	if (ref $data eq "ARRAY") {
