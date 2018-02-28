@@ -1123,6 +1123,13 @@ sub dl_zerobin {
 	{
 		host => "paste.ee",
 		path => qr!^/[pr]/(\w+)!,
+		fragment => qr!.+!,
+		to_path => "/r/#1",
+		parser => \&dl_basic_cryptojs,
+	},
+	{
+		host => "paste.ee",
+		path => qr!^/[pr]/(\w+)!,
 		to_path => "/r/#1",
 	},
 	{
