@@ -108,6 +108,7 @@ sub smart_match {
 		# (1,) in list context since it needs a trueish value.
 		# This bit of linenoise works consistently in all cases.
 		return map {substr($str, $-[$_], $+[$_]-$-[$_])} 0..$#-;
+		#return @{^CAPTURE}; # new in 5.26
 	}
 	elsif (ref($pattern) eq "" && $str eq $pattern) {
 		return $str;
