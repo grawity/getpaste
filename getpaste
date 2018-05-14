@@ -1178,6 +1178,11 @@ sub dl_zerobin {
 		to_query => "tx=on",
 	},
 	{
+		host => "paste.xinu.at",
+		path => qr!^/\w+!,
+		to_path => "#0",
+	},
+	{
 		host => "paste.dn42.us",
 		fragment => qr{^/(.+)!(.+)},
 		to_path => "#{path.0}api/get/#{fragment.1}",
