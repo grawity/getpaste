@@ -1159,6 +1159,11 @@ sub dl_zerobin {
 		to_path => "/pastes/#1/download",
 	},
 	{
+		host => "paste.pound-python.org",
+		path => qr!^/(?:show|raw)/(\w+)!,
+		to_path => "/raw/#1",
+	},
+	{
 		host => "www.refheap.com",
 		path => qr!^/\d+!,
 		to_path => "#0/raw",
