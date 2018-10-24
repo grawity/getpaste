@@ -1208,6 +1208,11 @@ sub dl_zerobin {
 		path => qr!^/(\w+)!,
 		to_path => "/raw/#1",
 	},
+	{
+		host => "ptpb.pw",
+		path => qr!^/([^/.]+)([/.].*)?!,
+		to_path => "/#1",
+	},
 	# generic (wild guess)
 	{
 		path => qr{/$},
