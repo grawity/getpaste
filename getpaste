@@ -962,21 +962,29 @@ sub dl_zerobin {
 	}
 
 	my $body = get($url) // return;
+	if ($body =~ /\bprivatebin\.js/) {
+		# recent PrivateBin versions have a different API
+		_debug("redirecting to PrivateBin handler");
+		goto &dl_privatebin;
+	}
 	$body =~ m{<div id="cipherdata"[^>]*>(.+)</div>} || return;
 	my $data = decode_html($1);
 	$data = decode_json($data);
 	if (ref $data eq "ARRAY") {
+		# early ZeroBin
 		$data = $data->[0]->{data};
 		$data = unwrap_sjcl($data, $frag);
 		$data = decode_base64($data);
 		$data = decompress_deflate($data);
 	} else {
+		# later ZeroBin and early PrivateBin
 		$data = $data->{data};
 		$data = decode_json($data);
 		$data = unwrap_sjcl($data, $frag);
 		$data = decode_base64($data);
 		if ($body =~ /\bPrivateBin\b/) {
-			$data = decode("UTF-8", $data);
+			# (see comment in dl_privatebin)
+			$data = decode("utf-8", $data);
 		}
 		$data = decompress_deflate($data);
 	}
