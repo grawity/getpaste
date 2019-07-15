@@ -22,12 +22,13 @@ my $opt_batch = 0;
 
 BEGIN {
 	if (eval {require Nullroute::Lib}) {
-		Nullroute::Lib->import(qw(_debug _warn _err _die));
+		Nullroute::Lib->import(qw(_trace _debug _warn _err _die));
 	} else {
 		$::arg0 = (split m!/!, $0)[-1];
 		$::debug = !!$ENV{DEBUG};
 		$::warnings = 0;
 		$::errors = 0;
+		sub _trace { warn "trace: @_\n" if $::debug; }
 		sub _debug { warn "debug: @_\n" if $::debug; }
 		sub _warn  { warn "warning: @_\n"; ++$::warnings; }
 		sub _err   { warn "error: @_\n"; ! ++$::errors; }
@@ -360,22 +361,27 @@ sub decompress_zlib {
 	if ($opt{is_gzip_or_zlib}) {
 		# autodetect RFC 1950 (zlib) or 1952 (gzip)
 		$wbits = Compress::Raw::Zlib->WANT_GZIP_OR_ZLIB;
+		_trace("using WindowBits = $wbits (WANT_GZIP_OR_ZLIB, detect 1950/1952)");
 	}
 	elsif ($opt{is_gzip}) {
 		# expect RFC 1952 (gzip)
 		$wbits = Compress::Raw::Zlib->WANT_GZIP;
+		_trace("using WindowBits = $wbits (WANT_GZIP, expect 1952)");
 	}
 	elsif ($opt{is_deflate}) {
 		# expect RFC 1951 (deflate)
 		$wbits = -Compress::Raw::Zlib->MAX_WBITS;
+		_trace("using WindowBits = $wbits (-MAX_WBITS, expect 1951 deflate)");
 	}
 	elsif ($opt{is_zlib}) {
 		# expect RFC 1950 (zlib)
 		$wbits = 15;
+		_trace("using WindowBits = $wbits (expect 1950 zlib)");
 	}
 	else {
 		# mirror the zlib default
 		$wbits = Compress::Raw::Zlib->MAX_WBITS;
+		_trace("using WindowBits = $wbits (MAX_WBITS, default)");
 	}
 
 	($stream, $status) = Compress::Raw::Zlib::Inflate->new(-WindowBits => $wbits);
