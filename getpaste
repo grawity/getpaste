@@ -1008,6 +1008,11 @@ sub dl_zerobin {
 		parser => \&dl_sour,
 	},
 	{
+		scheme => qr/^privatebin\+(.+)$/,
+		to_scheme => "#1",
+		parser => \&dl_privatebin,
+	},
+	{
 		scheme => qr/^zerobin\+(.+)$/,
 		to_scheme => "#1",
 		parser => \&dl_zerobin,
@@ -1097,6 +1102,10 @@ sub dl_zerobin {
 		host => ["irccloud.com", "www.irccloud.com"],
 		path => qr!^/pastebin/\w+!,
 		to_path => "#0.raw",
+	},
+	{
+		host => "paste.joseng.de",
+		parser => \&dl_privatebin,
 	},
 	{
 		host => "kopy.io",
