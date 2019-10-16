@@ -420,6 +420,32 @@ sub decompress_lzw {
 	return Compress::LZW->decompress($buf);
 }
 
+sub decompress_inflate {
+	my ($buf) = @_;
+
+	require IO::Uncompress::Inflate;
+	my $outbuf;
+	my $stream = IO::Uncompress::Inflate->new(\$buf);
+	my $status = $stream->read($outbuf);
+	if ($status <= 0) {
+		_die("inflate failed: $IO::Uncompress::Inflate::InflateError");
+	}
+	return $outbuf;
+}
+
+sub decompress_rawinflate {
+	my ($buf) = @_;
+
+	require IO::Uncompress::RawInflate;
+	my $outbuf;
+	my $stream = IO::Uncompress::RawInflate->new(\$buf);
+	my $status = $stream->read($outbuf);
+	if ($status <= 0) {
+		_die("inflate failed: $IO::Uncompress::RawInflate::RawInflateError");
+	}
+	return $outbuf;
+}
+
 # }}}
 # extra KDFs {{{
 
