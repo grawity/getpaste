@@ -710,6 +710,8 @@ sub unwrap_privatebin_v2 {
 	my $ikey = decode_privatebin_base58($passwd);
 	my $dkey = pbkdf2($ikey, $salt, $iter, "SHA256", $ks);
 
+	# note that this relies on the encoder producing the most compact output
+	# (or more precisely, behaving like JSON.stringify() in JavaScript)
 	my $hdr = encode_json($data->{adata});
 	my $tag = substr($ct, -$ts, $ts, "");
 
