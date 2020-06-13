@@ -1175,6 +1175,11 @@ sub dl_zerobin {
 		to_path => "/raw/#1",
 	},
 	{
+		host => "bpa.st",
+		path => qr!^/(\w+)!,
+		to_path => "/raw/#1",
+	},
+	{
 		host => qr/^(dark-)?code\.bulix\.org$/,
 		to_query => "raw",
 	},
