@@ -1001,13 +1001,14 @@ sub dl_privatebin {
 		return $data;
 	}
 	elsif ($body->{data}) {
+		_trace("unwrapping old v1 format");
 		my $data = $body->{data} // $body;
 		$data = unwrap_sjcl($data, $frag);
 		$data = decode_base64($data);
 		# The example code that comes with js-deflate mistakenly encodes binary
 		# data as UTF-8, and of course PrivateBin just used it verbatim.
 		# 2020-06-11: Apparently they changed to no longer use deflate.
-		if (eval {decode("utf-8", $data, &Encode::FB_CROAK)}) {
+		if (eval {decode("utf-8", my $tmp = $data, &Encode::FB_CROAK)}) {
 			_trace("working around js-deflate binary data bug");
 			$data = encode("latin1", decode("utf-8", $data));
 		} else {
