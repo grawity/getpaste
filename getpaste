@@ -367,6 +367,16 @@ sub decode_html {
 	return $str;
 }
 
+sub decode_html_harder {
+	my ($str) = @_;
+
+	eval {
+		require HTML::Entities
+	} or _die("missing Perl package 'HTML::Entities'");
+
+	return HTML::Entities::decode_entities($str);
+}
+
 sub try_decode_json {
 	my ($data) = @_;
 
@@ -870,7 +880,7 @@ sub dl_defuse {
 
 	if ($body =~ m{<textarea id="paste"[^>]*>(.+?)</textarea>}) {
 		my $data = $1;
-		$data = decode_html($data);
+		$data = decode_html_harder($data);
 		return $data;
 	}
 
@@ -912,7 +922,7 @@ sub dl_dpaste {
 
 	my $body = get($url);
 	if ($body =~ m{<textarea id="copySnippetSource">(.+?)</textarea>}s) {
-		return decode_html($1);
+		return decode_html_harder($1);
 	}
 	return;
 }
