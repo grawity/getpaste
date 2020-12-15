@@ -10,6 +10,7 @@ no locale;
 use open qw(:std :utf8);
 use Encode qw(decode encode);
 use Getopt::Long qw(:config bundling no_ignore_case);
+use HTML::Entities;
 use JSON;
 use LWP::UserAgent;
 use MIME::Base64;
@@ -365,16 +366,6 @@ sub decode_html {
 	$str =~ s/&quot;/"/g;
 	$str =~ s/&amp;/\&/g;
 	return $str;
-}
-
-sub decode_html_harder {
-	my ($str) = @_;
-
-	eval {
-		require HTML::Entities
-	} or _die("missing Perl package 'HTML::Entities'");
-
-	return HTML::Entities::decode_entities($str);
 }
 
 sub try_decode_json {
@@ -880,7 +871,7 @@ sub dl_defuse {
 
 	if ($body =~ m{<textarea id="paste"[^>]*>(.+?)</textarea>}) {
 		my $data = $1;
-		$data = decode_html_harder($data);
+		$data = decode_entities($data);
 		return $data;
 	}
 
@@ -922,7 +913,7 @@ sub dl_dpaste {
 
 	my $body = get($url);
 	if ($body =~ m{<textarea id="copySnippetSource">(.+?)</textarea>}s) {
-		return decode_html_harder($1);
+		return decode_entities($1);
 	}
 	return;
 }
