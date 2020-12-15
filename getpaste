@@ -907,6 +907,16 @@ sub dl_dgl_pastesh {
 	return $data;
 }
 
+sub dl_dpaste {
+	my ($url, $frag) = @_;
+
+	my $body = get($url);
+	if ($body =~ m{<textarea id="copySnippetSource">(.+?)</textarea>}) {
+		return decode_html($1);
+	}
+	return;
+}
+
 sub dl_ezcrypt {
 	eval {
 		require Crypt::Digest::SHA1;
@@ -1216,9 +1226,14 @@ sub dl_zerobin {
 		to_path => "#0.txt",
 	},
 	{
-		host => ["dpaste.org", "dpaste.de"],
+		host => "dpaste.de",
 		path => qr!^/\w+!,
 		to_path => "#0/raw/",
+	},
+	{
+		host => "dpaste.org",
+		path => qr!^/\w+!,
+		parser => \&dl_dpaste,
 	},
 	{
 		host => "www.dropbox.com",
