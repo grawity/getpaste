@@ -911,7 +911,7 @@ sub dl_dpaste {
 	my ($url, $frag) = @_;
 
 	my $body = get($url);
-	if ($body =~ m{<textarea id="copySnippetSource">(.+?)</textarea>}) {
+	if ($body =~ m{<textarea id="copySnippetSource">(.+?)</textarea>}s) {
 		return decode_html($1);
 	}
 	return;
