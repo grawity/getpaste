@@ -1105,6 +1105,22 @@ sub dl_sour {
 	return $data;
 }
 
+sub dl_ubuntu {
+	my ($url, $frag) = @_;
+
+	my $body = get($url);
+	if ($body =~ m{<div class="paste"><pre>(.+?)</pre></div>}s) {
+		$body = $1;
+		$body =~ s{<span>([^<>]*?)</span>}{$1}g;
+		$body =~ s{<span class="\w+">([^<>]*?)</span>}{$1}g;
+		if ($body =~ /[<>]/) {
+			_warn("unmatched HTML tags remain!");
+		}
+		return decode_entities($body);
+	}
+	return;
+}
+
 sub dl_zerobin {
 	my ($url, $frag) = @_;
 
@@ -1382,6 +1398,11 @@ sub dl_zerobin {
 		host => "fpaste.scsys.co.uk",
 		path => qr!^/\d+!,
 		to_query => "tx=on",
+	},
+	{
+		host => "pastebin.ubuntu.com",
+		path => qr!^/p/\w+!,
+		parser => \&dl_ubuntu,
 	},
 	{
 		host => "paste.xinu.at",
