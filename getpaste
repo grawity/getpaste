@@ -1446,7 +1446,7 @@ sub dl_zerobin {
 	},
 	{
 		query => qr/^[0-9a-f]{16}$/,
-		fragment => qr{^[0-9A-Za-z+/]{43}=$},
+		fragment => qr{^[0-9A-Za-z+/]{43}=?$},
 		note => "probably a ZeroBin site based on query & fragment",
 		parser => \&dl_zerobin,
 	},
