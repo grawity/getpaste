@@ -1412,7 +1412,7 @@ sub dl_zerobin {
 	{
 		host => "paste.dn42.us",
 		fragment => qr{^/(.+)!(.+)},
-		to_path => "#{path.0}/#{fragment.1}",
+		to_path => "/paste/#{fragment.1}",
 		to_fragment => "#{fragment.2}",
 		parser => \&dl_sour,
 	},
