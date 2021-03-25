@@ -1400,7 +1400,7 @@ sub dl_zerobin {
 		to_query => "tx=on",
 	},
 	{
-		host => "pastebin.ubuntu.com",
+		host => ["pastebin.ubuntu.com", "paste.ubuntu.com"],
 		path => qr!^/p/\w+!,
 		parser => \&dl_ubuntu,
 	},
