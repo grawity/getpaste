@@ -8,6 +8,7 @@ use 5.008;
 WriteMakefile(
 	NAME => "App::getpaste",
 	AUTHOR => "Mantas Mikulėnas <grawity\@gmail.com>",
+	VERSION => "0.20",
 	LICENSE => "mit",
 	PREREQ_PM => {
 		"perl" => "v5.10",

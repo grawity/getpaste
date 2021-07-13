@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 # getpaste - retrieves raw text from pastebins
 #
-# (c) 2010-2015 Mantas Mikulėnas <grawity@gmail.com>
+# (c) 2010-2021 Mantas Mikulėnas <grawity@gmail.com>
 # Released under the MIT License (dist/LICENSE.mit)
 use v5.10;
 use warnings;
