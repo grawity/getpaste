@@ -704,7 +704,7 @@ sub unwrap_privatebin_v2 {
 	unless ($mode eq "gcm") {
 		_die("unsupported cipher mode ".$mode);
 	}
-	unless ($comp eq "zlib") {
+	unless ($comp =~ /^(none|zlib)$/) {
 		_die("unsupported compression ".$comp);
 	}
 
