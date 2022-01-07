@@ -1285,8 +1285,8 @@ sub dl_zerobin {
 	},
 	{
 		host => ["irccloud.com", "www.irccloud.com"],
-		path => qr!^/pastebin/\w+!,
-		to_path => "#0.raw",
+		path => qr!^/pastebin/(\w+)!,
+		to_path => "/pastebin/raw/#1",
 	},
 	{
 		host => "paste.joseng.de",
