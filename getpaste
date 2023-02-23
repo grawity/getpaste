@@ -1426,6 +1426,13 @@ sub dl_zerobin {
 		host => "termbin.com",
 	},
 	{
+		host => "www.traff.co",
+		parser => sub {
+			get(shift) =~ m{<textarea.+?required>(.+?)\n</textarea>}s;
+			return decode_entities($1);
+		},
+	},
+	{
 		host => "vomitb.in",
 		path => qr!^/(\w+)!,
 		to_path => "/raw/#1",
