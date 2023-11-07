@@ -1372,6 +1372,11 @@ sub dl_zerobin {
 		to_path => "/pastes/#1/download",
 	},
 	{
+		host => "pastes.io",
+		path => qr!^/(\w+)!,
+		to_path => "/raw/#1",
+	},
+	{
 		host => "paste.pound-python.org",
 		path => qr!^/(?:show|raw)/(\w+)!,
 		to_path => "/raw/#1",
@@ -1446,7 +1451,7 @@ sub dl_zerobin {
 	},
 	{
 		query => qr/^[0-9a-f]{16}$/,
-		fragment => qr{^[0-9A-Za-z+/]{43}=?$},
+		fragment => qr{^[0-9A-Za-z+/]{43,44}=?$},
 		note => "probably a ZeroBin site based on query & fragment",
 		parser => \&dl_zerobin,
 	},
