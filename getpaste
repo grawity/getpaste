@@ -1431,6 +1431,11 @@ sub dl_zerobin {
 		host => "termbin.com",
 	},
 	{
+		host => "textbin.net",
+		path => qr!^/(\w+)!,
+		to_path => "/raw/#1",
+	},
+	{
 		host => "vomitb.in",
 		path => qr!^/(\w+)!,
 		to_path => "/raw/#1",
