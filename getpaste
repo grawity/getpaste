@@ -695,6 +695,40 @@ sub unwrap_openssl_aes {
 	return Crypt::Mode::CBC->new("AES")->decrypt($data, $key, $iv);
 }
 
+sub unwrap_pastesh {
+	eval {
+		require Crypt::Mac::HMAC;
+	} or _die("missing Perl package 'CryptX'");
+
+	Crypt::Mac::HMAC->import("hmac");
+
+	my ($vers, $data, $passwd, $atag) = @_;
+
+	_debug("password: $passwd");
+
+	if ($atag) {
+		_debug("atag: "._db64($atag));
+		my $mac1 = hmac("SHA512", "auth key", $passwd);
+		my $mac2 = hmac("SHA512", $mac1, $data);
+		if ($mac2 ne $atag) {
+			_debug("mac1: "._db64($mac1));
+			_debug("mac2: "._db64($mac2));
+			_due("bad HMAC");
+		}
+	}
+
+	if ($vers eq "v3") {
+		$data = unwrap_openssl_aes($data, $passwd, (
+						pbkdf2 => 1,
+						kdf_algo => "SHA512",
+						# yes, CryptoJS defaults to 1 in v2/v3
+						kdf_iter => 1));
+	} else {
+		$data = unwrap_openssl_aes($data, $passwd, (kdf_algo => "SHA512"));
+	}
+	return $data;
+}
+
 sub unwrap_privatebin_v2 {
 	eval {
 		require Crypt::AuthEnc::GCM;
@@ -927,11 +961,27 @@ sub dl_dgl_pastesh {
 	my $id = $1;
 
 	my $body = get($url) // return;
-	$body =~ s/^(.+)\n//;
-	my $passwd = $id . $1 . $frag . "https://paste.sh";
 
-	my $data = decode_base64($body);
-	$data = unwrap_openssl_aes($data, $passwd, (kdf_algo => "SHA512"));
+	$body =~ m{name="content" value="([^"]*?)"} // return;
+	my $data = decode_base64($1);
+
+	$body =~ m{name="type" value="([^"]*?)"} // return;
+	my $vers = $1;
+
+	$body =~ m{name="etag" value="([^"]*?)"} // return;
+	my $atag = decode_base64($1);
+
+	$body =~ m{name="serverkey" value="([^"]*?)"} // return;
+	my $serverkey = $1;
+
+	my $passwd = $id . $serverkey . $frag . "https://paste.sh";
+	$data = unwrap_pastesh($vers, $data, $passwd, $atag);
+
+	if ($vers eq "v3") {
+		# Remove the "Subject:" line (or don't)
+		#$data =~ s/^.*?\n\n//m;
+	}
+
 	return $data;
 }
 
@@ -1375,7 +1425,6 @@ sub dl_zerobin {
 	},
 	{
 		host => "paste.sh",
-		to_path => "#0.txt",
 		parser => \&dl_dgl_pastesh,
 	},
 	{
