@@ -647,11 +647,14 @@ sub unwrap_openssl_aes {
 	eval {
 		require Crypt::Cipher::AES;
 		require Crypt::Mode::CBC;
+		require Crypt::KeyDerivation;
 	} or _die("missing Perl package 'CryptX'");
 
 	# serialization: raw [magic + salt + data]
 	# key derivation: EVP_BytesToKey (usually MD5)
 	# encryption: AES-256-CBC
+
+	Crypt::KeyDerivation->import("pbkdf2");
 
 	my ($data, $passwd, %opt) = @_;
 
@@ -669,8 +672,18 @@ sub unwrap_openssl_aes {
 	_debug("salt: "._db64($salt));
 	_debug("salt: "._dhex($salt));
 
-	my $algo = uc($opt{kdf_algo} // "MD5");
-	my $buf = EVP_BytesToKey($salt, $passwd, $algo, $ks + $bs);
+	my $buf;
+	if ($opt{pbkdf2}) {
+		my $algo = uc($opt{kdf_algo} // "SHA256");
+		my $iter = $opt{kdf_iter} // 1000;
+		_debug("KDF: PBKDF2 (algo=$algo, iter=$iter)");
+		$buf = pbkdf2($passwd, $salt, $iter, $algo, $ks + $bs);
+	} else {
+		my $algo = uc($opt{kdf_algo} // "MD5");
+		_debug("KDF: EVP_BytesToKey (algo=$algo");
+		$buf = EVP_BytesToKey($salt, $passwd, $algo, $ks + $bs);
+	}
+
 	my $key = substr($buf, 0, $ks, "");
 	my $iv = substr($buf, 0, $bs, "");
 
