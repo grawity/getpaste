@@ -48,6 +48,16 @@ sub _dump {
 	return Data::Dumper->new(\@_)->Terse(1)->Indent(0)->Dump;
 }
 
+sub _db64 {
+	my ($buf) = @_;
+	return "[len ".length($buf)."] {".encode_base64($buf, "")."}";
+}
+
+sub _dhex {
+	my ($buf) = @_;
+	return "[len ".length($buf)."] <".encode_hex($buf).">";
+}
+
 sub _prompt {
 	my ($msg) = @_;
 
