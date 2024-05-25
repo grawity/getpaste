@@ -491,27 +491,22 @@ sub decompress_rawinflate {
 # extra KDFs {{{
 
 sub EVP_BytesToKey {
+	# Key+IV derivation used by 'openssl enc'
 	eval {
 		require Crypt::Digest;
 	} or _die("missing Perl package 'CryptX'");
 
 	Crypt::Digest->import("digest_data");
 
-	my ($salt, $passphrase, $ks, $ivs, %opt) = @_;
+	my ($salt, $passphrase, $algo, $len) = @_;
 
-	my $algo = uc($opt{kdf_algo} // "MD5");
 	my $hash = "";
 	my $buf = "";
-
-	while (length($buf) < $ks + $ivs) {
+	while (length($buf) < $len) {
 		$hash = digest_data($algo, $hash, $passphrase, $salt);
 		$buf .= $hash;
 	}
-
-	my $key = substr($buf, 0, $ks);
-	my $iv = substr($buf, $ks, $ivs);
-
-	return ($key, $iv);
+	return $buf;
 }
 
 # }}}
@@ -670,10 +665,19 @@ sub unwrap_openssl_aes {
 		_die("bad magic value in encrypted data");
 	}
 
-	my ($key, $iv) = EVP_BytesToKey($salt, $passwd, $ks, $bs, %opt);
+	_debug("pass: ".$passwd);
+	_debug("salt: "._db64($salt));
+	_debug("salt: "._dhex($salt));
 
-	_debug("key: <".encode_hex($key).">");
-	_debug("iv: <".encode_hex($iv).">");
+	my $algo = uc($opt{kdf_algo} // "MD5");
+	my $buf = EVP_BytesToKey($salt, $passwd, $algo, $ks + $bs);
+	my $key = substr($buf, 0, $ks, "");
+	my $iv = substr($buf, 0, $bs, "");
+
+	_debug("Key: "._db64($key));
+	_debug("IV: "._db64($iv));
+	_debug("Key: "._dhex($key));
+	_debug("IV: "._dhex($iv));
 
 	return Crypt::Mode::CBC->new("AES")->decrypt($data, $key, $iv);
 }
