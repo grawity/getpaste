@@ -8,6 +8,20 @@ use warnings;
 use strict;
 no locale;
 use open qw(:std :utf8);
+require Crypt::AuthEnc::CCM;
+require Crypt::AuthEnc::GCM;
+require Crypt::AuthEnc::OCB;
+require Crypt::Cipher;
+require Crypt::Cipher::AES;
+require Crypt::Digest;
+require Crypt::Digest::RIPEMD160;
+require Crypt::Digest::SHA1;
+require Crypt::Digest::SHA512;
+require Crypt::KeyDerivation;
+require Crypt::Mac::HMAC;
+require Crypt::Mac::PMAC;
+require Crypt::Mode::CBC;
+require Crypt::Mode::OFB;
 use Encode qw(decode encode);
 use Getopt::Long qw(:config bundling no_ignore_case);
 use HTML::Entities;
@@ -64,13 +78,6 @@ sub _prompt {
 	print STDERR "\e[1m$msg\e[m "; $|++;
 	chomp(my $resp = <STDIN>);
 	return $resp;
-}
-
-sub check_deps {
-	#require Compress::LZW;
-	require Compress::Raw::Zlib;
-	require CryptX;
-	exit;
 }
 
 # }}}
@@ -492,10 +499,6 @@ sub decompress_rawinflate {
 
 sub EVP_BytesToKey {
 	# Key+IV derivation used by 'openssl enc'
-	eval {
-		require Crypt::Digest;
-	} or _die("missing Perl package 'CryptX'");
-
 	Crypt::Digest->import("digest_data");
 
 	my ($salt, $passphrase, $algo, $len) = @_;
@@ -525,11 +528,6 @@ sub ocb2_times2 {
 }
 
 sub ocb2_decrypt_verify {
-	eval {
-		require Crypt::Cipher;
-		require Crypt::Mac::PMAC;
-	} or _die("missing Perl package 'CryptX'");
-
 	Crypt::Mac::PMAC->import("pmac");
 
 	my ($cipher, $key, $nonce, $aad, $ciphertext, $tag) = @_;
@@ -572,11 +570,6 @@ sub ocb2_decrypt_verify {
 # iterations, IV...) and return decrypted/unwrapped data.
 
 sub unwrap_defuse {
-	eval {
-		require Crypt::AuthEnc::OCB;
-		require Crypt::KeyDerivation;
-	} or _die("missing Perl package 'CryptX'");
-
 	Crypt::AuthEnc::OCB->import(":all");
 	Crypt::KeyDerivation->import("pbkdf2");
 
@@ -604,12 +597,6 @@ sub unwrap_defuse {
 }
 
 sub unwrap_ezcrypt {
-	eval {
-		require Crypt::Cipher::AES;
-		require Crypt::KeyDerivation;
-		require Crypt::Mode::OFB;
-	} or _die("missing Perl package 'CryptX'");
-
 	Crypt::KeyDerivation->import("pbkdf2");
 
 	# serialization: raw [salt + data]
@@ -644,12 +631,6 @@ sub unwrap_ncrypt {
 }
 
 sub unwrap_openssl_aes {
-	eval {
-		require Crypt::Cipher::AES;
-		require Crypt::Mode::CBC;
-		require Crypt::KeyDerivation;
-	} or _die("missing Perl package 'CryptX'");
-
 	# serialization: raw [magic + salt + data]
 	# key derivation: EVP_BytesToKey (usually MD5)
 	# encryption: AES-256-CBC
@@ -696,10 +677,6 @@ sub unwrap_openssl_aes {
 }
 
 sub unwrap_pastesh {
-	eval {
-		require Crypt::Mac::HMAC;
-	} or _die("missing Perl package 'CryptX'");
-
 	Crypt::Mac::HMAC->import("hmac");
 
 	my ($vers, $data, $passwd, $atag) = @_;
@@ -730,11 +707,6 @@ sub unwrap_pastesh {
 }
 
 sub unwrap_privatebin_v2 {
-	eval {
-		require Crypt::AuthEnc::GCM;
-		require Crypt::KeyDerivation;
-	} or _die("missing Perl package 'CryptX'");
-
 	Crypt::AuthEnc::GCM->import(":all");
 	Crypt::KeyDerivation->import("pbkdf2");
 
@@ -790,12 +762,6 @@ sub unwrap_privatebin_v2 {
 }
 
 sub unwrap_sjcl {
-	eval {
-		require Crypt::AuthEnc::CCM;
-		require Crypt::AuthEnc::GCM;
-		require Crypt::KeyDerivation;
-	} or _die("missing Perl package 'CryptX'");
-
 	Crypt::AuthEnc::CCM->import(":all");
 	Crypt::AuthEnc::GCM->import(":all");
 	Crypt::KeyDerivation->import("pbkdf2");
@@ -996,10 +962,6 @@ sub dl_dpaste {
 }
 
 sub dl_ezcrypt {
-	eval {
-		require Crypt::Digest::SHA1;
-	} or _die("missing Perl package 'CryptX'");
-
 	Crypt::Digest::SHA1->import("sha1_hex");
 
 	my ($url, $frag) = @_;
@@ -1111,11 +1073,6 @@ sub dl_privatebin {
 }
 
 sub dl_riseup {
-	eval {
-		require Crypt::Digest::SHA512;
-		require Crypt::AuthEnc::CCM;
-	} or _die("missing Perl package 'CryptX'");
-
 	Crypt::Digest::SHA512->import("sha512");
 	Crypt::AuthEnc::CCM->import("ccm_decrypt_verify");
 
@@ -1150,10 +1107,6 @@ sub dl_riseup {
 }
 
 sub dl_sour {
-	eval {
-		require Crypt::Digest::RIPEMD160;
-	} or _die("missing Perl package 'CryptX'");
-
 	Crypt::Digest::RIPEMD160->import("ripemd160");
 
 	my ($url, $frag) = @_;
@@ -1550,7 +1503,6 @@ sub usage {
 GetOptions(
 	"help"		=> sub { usage(); exit; },
 	"batch"		=> \$opt_batch,
-	"check-deps"	=> \&check_deps,
 	"k|insecure"	=> \$opt_insecure,
 	"u|show-url"	=> \$opt_show_url,
 ) or exit 2;
