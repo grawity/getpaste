@@ -32,6 +32,7 @@ use MIME::Base64;
 my $opt_insecure = 0;
 my $opt_show_url = 0;
 my $opt_batch = 0;
+my $opt_allow_binary = 0;
 
 # generic utility functions {{{
 
@@ -1098,12 +1099,25 @@ sub dl_riseup {
 
 	# strip JSON header
 
-	if ($body =~ s/^(?:..)*\0\0//) {
-		my $header = decode("UTF-16", $&);
+	if ($body =~ s/^((?:..)*?)\0\0//) {
+		my $header = decode("UTF-16", $1);
 		_debug("header: $header");
+		$header = decode_json($header);
+		if ($header->{mime} && mime_is_binary($header->{mime}) && !$opt_allow_binary) {
+			_die("header indicates binary MIME type");
+		}
 	}
 
 	return $body;
+}
+
+sub mime_is_binary {
+	my ($mime) = @_;
+	return 0 if $mime =~ m{^text/};
+	return 1 if $mime =~ m{^(audio|video|image)/};
+	return 1 if $mime eq "application/octet-stream";
+	# ehh just in case
+	return 1;
 }
 
 sub dl_sour {
@@ -1515,6 +1529,7 @@ GetOptions(
 	"batch"		=> \$opt_batch,
 	"k|insecure"	=> \$opt_insecure,
 	"u|show-url"	=> \$opt_show_url,
+	"allow-bin!"	=> \$opt_allow_binary,
 ) or exit 2;
 
 if (!@ARGV) {
