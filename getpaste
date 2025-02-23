@@ -1247,6 +1247,11 @@ sub dl_zerobin {
 		to_path => "#0/raw.txt",
 	},
 	{
+		host => "codeshare.io",
+		path => qr!^/\w+!,
+		parser => \&dl_codeshare_io,
+	},
+	{
 		host => "cryptb.in",
 		parser => \&dl_cryptbin_do,
 	},
@@ -1375,6 +1380,11 @@ sub dl_zerobin {
 		host => "paste.ee",
 		path => qr!^/[pr]/(\w+)!,
 		to_path => "/r/#1",
+	},
+	{
+		host => "paste.rs",
+		path => qr!^/(\w+)!,
+		to_path => "/#1",
 	},
 	{
 		host => "paste.sh",
